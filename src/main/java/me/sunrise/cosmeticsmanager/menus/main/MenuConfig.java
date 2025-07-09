@@ -1,36 +1,31 @@
-package me.sunrise.cosmeticsmanager.menus.chat_colors;
+package me.sunrise.cosmeticsmanager.menus.main;
 
 
-import me.sunrise.cosmeticsmanager.CosmeticsManager;
+
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
+
 import java.util.*;
 
-public class ChatColorsMenuConfig {
+public class MenuConfig {
 
     private final String title;
     private final String texture;
     private final int size;
-    private final List<Integer> emptySlots;
-    private final Map<String, ChatColorItem> items = new LinkedHashMap<>();
+    private final Map<String, MenuItem> items = new LinkedHashMap<>();
+    private final YamlConfiguration config;
 
-    public ChatColorsMenuConfig(CosmeticsManager plugin) {
-        File file = new File(plugin.getDataFolder(), "guis/chat-colors-menu.yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(file);
+    public MenuConfig(YamlConfiguration menuConfig) {
+        config = menuConfig;
 
-        File file1 = new File(plugin.getDataFolder(), "cosmetics/chat-colors.yml");
-        YamlConfiguration chatColors = YamlConfiguration.loadConfiguration(file1);
-
-        title = config.getString("settings.title", "<green>Chat Colors");
-        texture = config.getString("settings.texture", "");
-        size = config.getInt("settings.size", 54);
-        emptySlots = config.getIntegerList("settings.empty-slots");
-        String noPermission = config.getString("settings.no-permission", null);
+        title = menuConfig.getString("settings.title", "Menu");
+        texture = menuConfig.getString("settings.texture", "");
+        size = menuConfig.getInt("settings.size", 27);
+        String noPermission = menuConfig.getString("settings.no-permission", null);
 
 
 
-        var section = config.getConfigurationSection("settings.colors-items");
+        var section = menuConfig.getConfigurationSection("settings.items");
         if (section != null) {
             for (String key : section.getKeys(false)) {
                 var sub = section.getConfigurationSection(key);
@@ -43,11 +38,11 @@ public class ChatColorsMenuConfig {
                 String material = sub.getString("material");
                 List<String> lore = sub.getStringList("lore");
                 int slot = sub.getInt("slot");
-                String permission = chatColors.getString("colors." + key + ".permission", null);
+                String permission = menuConfig.getString("permission", null);
                 String  onClick = sub.getString("on-click");
 
 
-                items.put(key, new ChatColorItem(
+                items.put(key, new MenuItem(
                         key,
                         color,
                         name,
@@ -63,9 +58,9 @@ public class ChatColorsMenuConfig {
         }
     }
 
+    public YamlConfiguration getConfig() { return config; }
     public String getTitle() { return title; }
     public String getTexture() { return texture; }
     public int getSize() { return size; }
-    public List<Integer> getEmptySlots() { return emptySlots; }
-    public Collection<ChatColorItem> getItems() { return items.values(); }
+    public Collection<MenuItem> getItems() { return items.values(); }
 }

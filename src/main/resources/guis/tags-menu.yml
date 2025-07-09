@@ -1,0 +1,75 @@
+settings:
+  name: "tagsmenu"
+  # Valor apenas para identificação dentro do código, não altere
+  type: "tag"
+  title: "<red>Tags Menu"
+  # Tamanho da GUI. Apenas multiplos de 9 até 54
+  size: 27
+  # Nome do arquivo da textura no ItemsAdder:  "yourPack:custom_menu"
+  texture: ""
+  # Lore de tags bloqueadas
+  no-permission: "<red>Bloqueado"
+
+  items:
+    my-tags:
+      # Cor de name ex.: "red "ou "#ff0000
+      color: "green"
+      name: "Minhas Tags"
+      # 0 - Minecraft | 1 - ItemsAdder | 2 Player Head
+      data: 0
+      # Material do item ou se data: 1 , coloque o nome do customItem, coloque data: "2" caso o item seja uma player_head
+      material: NAME_TAG
+      lore:
+        - "<green>Clique para ver as tags disponíveis."
+      slot: 12
+      # Colocar apenas se quiser que na lore apareça a mensagem de no-permission
+      # Os comandos ao clicar verificam a permissão da tag no arquivo /cosmetics/tags.yml
+      permission:
+      # Comando executado ao clicar no item, coloque "none" para não executar nada ao clicar
+      on-click: "myTags"
+
+    all-tags:
+      color: "gold"
+      name: "<!i><bold>Todas Tags"
+      data: 0
+      material: CHEST
+      lore:
+        - "<green>Clique para ver todas as tags."
+      slot: 13
+      permission:
+      on-click: "allTags"
+
+    blocked-tags:
+      color: "red"
+      name: "Bloqueadas"
+      data: 0
+      material: BARRIER
+      lore:
+        - "<green>Clique para ver tags ainda não obtidas."
+      slot: 14
+      permission:
+      on-click: "blockedTags"
+
+    actual:
+      color: ""
+      name: "<!i>Tag Atual"
+      data: 2
+      material: PLAYER_HEAD
+      lore:
+        - "[Tag]"
+      # [Tag] é substituído por esse valor se o player não tiver nenhuma tag selecionada
+      no-tag: "<gray><i>Nenhuma tag"
+      slot: 26
+      permission:
+      on-click: ""
+
+    back:
+      color: "white"
+      name: "<!i>Voltar"
+      data: 0
+      material: KNOWLEDGE_BOOK
+      lore:
+      slot: 18
+      permission:
+      on-click: "cosmeticsMenu"
+

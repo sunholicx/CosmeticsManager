@@ -1,4 +1,10 @@
 name: CosmeticsManager
-version: '1.0-SNAPSHOT'
-main: me.sunrise.cosmeticsManager.CosmeticsManager
-api-version: '1.21'
+version: '1.0'
+main: me.sunrise.cosmeticsmanager.CosmeticsManager
+api-version: '1.21.4'
+description: Gerencia cosméticos (tags, chat color, badges) para players.
+author: Sunrise
+depend:
+commands:
+  cosmetics:
+    description: Menu de cosméticos.

@@ -1,31 +1,33 @@
-package me.sunrise.cosmeticsmanager.model;
+package me.sunrise.cosmeticsmanager.menus.browse;
 
 import java.util.List;
 
-public class TagData {
+public class CosmeticData {
 
     private String id;
-    private String tag;
+    private String name;
     private int data;
     private String material;
     private List<String> lore;
     private String permission;
+    private String onClick;
 
-    public TagData(String id, String tag, int data, String material, List<String> lore, String permission) {
+    public CosmeticData(String id, String name, int data, String material, List<String> lore, String permission, String onClick) {
         this.id = id;
-        this.tag = tag;
+        this.name = name;
         this.data = data;
         this.material = material;
         this.lore = lore;
         this.permission = permission;
+        this.onClick = onClick;
     }
 
     public String getId() {
         return id;
     }
 
-    public String getTag() {
-        return tag;
+    public String getName() {
+        return name;
     }
 
     public int getData() {
@@ -42,5 +44,9 @@ public class TagData {
 
     public String getPermission() {
         return permission;
+    }
+
+    public String getOnClick() {
+        return onClick;
     }
 }

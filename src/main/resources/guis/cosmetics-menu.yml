@@ -2,7 +2,7 @@ settings:
   name: "cosmeticsmenu"
   # Valor apenas para identificação dentro do código, não altere
   type: "cosmetics"
-  title: "<red>Tags Menu"
+  title: "<red>Cosmetics Menu"
   # Tamanho da GUI. Apenas multiplos de 9 até 54
   size: 27
   # Nome do arquivo da textura no ItemsAdder:  "yourPack:custom_menu"
@@ -24,7 +24,7 @@ settings:
       slot: 12
       # Colocar apenas se quiser que na lore apareça a mensagem de no-permission
       # Os comandos ao clicar verificam a permissão da cor no arquivo /cosmetics/chat-color.yml
-      permission: ""
+      permission:
       # Comando executado ao clicar no item, coloque "none" para não executar nada ao clicar
       on-click: "badgesMenu"
 
@@ -36,7 +36,7 @@ settings:
       lore:
         - "<green>Clique para abrir o menu de tags."
       slot: 13
-      permission: ""
+      permission:
       on-click: "tagsMenu"
 
     chat-colors:
@@ -47,7 +47,7 @@ settings:
       lore:
         - "<green>Clique para abrir o menu de cores"
       slot: 14
-      permission: ""
+      permission:
       on-click: "chatColorsMenu"
 
     actual:
@@ -58,12 +58,12 @@ settings:
       lore:
         - "Badge: [Badge]"
         - "Tag: [Tag]"
-        - "Cor: <i>[Color]Está é sua cor atua"
+        - "Cor: <i>[Color]Está é sua cor atual"
       no-badge: "<gray><i>Sem badge"
-      no-tag: "<gray><i>Padrão"
-      no-color: "<gray><i>Sem tag"
+      no-tag: "<gray><i>Sem tag"
+      no-color: "<gray><i>"
       slot: 26
-      permission: ""
+      permission:
       on-click: "none"
 
 

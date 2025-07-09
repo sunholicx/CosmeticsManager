@@ -1,0 +1,53 @@
+settings:
+  name: "browsetags"
+  # Valor apenas para identificação dentro do código, não altere
+  type: "tag"
+  # Título do menu
+  my: "<red>Minhas Tags"
+  all: "<red>Todas Tags"
+  blocked: "<red>Tags Bloqueadas"
+  # Essa string é concatenada com o título para mostrar o número da página atual
+  page: " - Página [n]"
+  # Tamanho da GUI. Apenas multiplos de 9 até 54
+  size: 54
+  empty-spaces: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 18, 26, 27, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 51, 52, 53]
+  # Nome do arquivo da textura no ItemsAdder:  "yourPack:custom_menu"
+  texture: ""
+  # Lore de tags bloqueadas
+  no-permission: "<red>Bloqueado"
+
+  # Apenas coloque botões e slots decorativos aqui, as tags devem ser configuradas em /cometics/tags.yml
+  items:
+    menu:
+      # Cor de name ex.: "red "ou "#ff0000
+      color: "gold"
+      name: "Menu"
+      # 0 - Minecraft | 1 - ItemsAdder | 2 Player Head
+      data: 0
+      # Material do item ou se data: 1 , coloque o nome do customItem, coloque data: "2" caso o item seja uma player_head
+      material: KNOWLEDGE_BOOK
+      lore:
+        -
+      slot: 49
+      # Comando executado ao clicar no item, coloque "none" para não executar nada ao clicar
+      on-click: "tagsMenu"
+
+    back:
+      color: "green"
+      name: "Voltar"
+      data: 0
+      material: NETHER_STAR
+      lore:
+        -
+      slot: 48
+      on-click: "backPage"
+    next:
+      color: "green"
+      name: "Próxima"
+      data: 0
+      material: NETHER_STAR
+      lore:
+        -
+      slot: 50
+      on-click: "nextPage"
+

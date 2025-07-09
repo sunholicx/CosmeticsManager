@@ -1,0 +1,75 @@
+settings:
+  name: "badgesmenu"
+  # Valor apenas para identificação dentro do código, não altere
+  type: "badge"
+  title: "<red>Badges Menu"
+  # Tamanho da GUI. Apenas multiplos de 9 até 54
+  size: 27
+  # Nome do arquivo da textura no ItemsAdder:  "yourPack:custom_menu"
+  texture: ""
+  # Lore de badges bloqueadas
+  no-permission: "<red>Bloqueado"
+
+  items:
+    my-badges:
+      # Cor de name ex.: "red "ou "#ff0000
+      color: "green"
+      name: "Minhas Badges"
+      # 0 - Minecraft | 1 - ItemsAdder | 2 Player Head
+      data: 0
+      # Material do item ou se data: 1 , coloque o nome do customItem, caso data: "2" coloque PLAYER_HEAD
+      material: COOKIE
+      lore:
+        - "<green>Clique para ver as badges disponíveis."
+      slot: 12
+      # Colocar apenas se quiser que na lore apareça a mensagem de no-permission
+      # Os comandos ao clicar verificam a permissão da badge no arquivo /cosmetics/badges.yml
+      permission:
+      # Comando executado ao clicar no item, coloque "none" para não executar nada ao clicar
+      on-click: "myBadges"
+
+    all-badges:
+      color: "gold"
+      name: "<!i><bold>Todas Badges"
+      data: 0
+      material: CHEST
+      lore:
+        - "<green>Clique para ver todas as badges."
+      slot: 13
+      permission:
+      on-click: "allBadges"
+
+    blocked-badges:
+      color: "red"
+      name: "Bloqueadas"
+      data: 0
+      material: BARRIER
+      lore:
+        - "<green>Clique para ver badges ainda não obtidas."
+      slot: 14
+      permission:
+      on-click: "blockedBadges"
+
+    actual:
+      color: ""
+      name: "<!i>Badge Atual"
+      data: 2
+      material: PLAYER_HEAD
+      lore:
+        - "[Badge]"
+      # [Badge] é substituído por esse valor se o player não tiver nenhuma badge selecionada
+      no-badge: "<gray><i>Nenhuma badge"
+      slot: 26
+      permission:
+      on-click: "none"
+
+    back:
+      color: "white"
+      name: "<!i>Voltar"
+      data: 0
+      material: KNOWLEDGE_BOOK
+      lore:
+      slot: 18
+      permission:
+      on-click: "cosmeticsMenu"
+

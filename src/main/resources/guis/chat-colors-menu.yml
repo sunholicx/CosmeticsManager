@@ -1,27 +1,35 @@
 settings:
-  name: "chatcolors"
+  name: "chatcolorsmenu"
+  # Valor apenas para identificação dentro do código, não altere
+  type: "color"
   title: "<red>Chat Colors"
   # Tamanho da GUI. Apenas multiplos de 9 até 54
   size: 54
-  # Nome do arquivo da textura no ItemsAdder
-  texture: "blank_menu"
-  # Espaços em branco
-  empty-slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 16, 18, 19, 25, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+  # Nome do arquivo da textura no ItemsAdder:  "yourPack:custom_menu"
+  texture: ""
+  # Lore de cores bloqueadas
+  no-permission: "<red>Bloqueado"
 
-  colors-items:
-    light_gray: # Nome da cor
+  items:
+    # Nome da cor, mesmo nome definido no arquivo /cosmetics/chat-colors.yml
+    gray:
       # Cor do chat ex.: "red "ou "#ff0000
       color: "gray"
-      name: "Cinza Claro"
-      # 0 - Minecraft | 1 - ItemsAdder
+      name: "Cinza"
+      # 0 - Minecraft | 1 - ItemsAdder | 2 Player Head
       data: 0
       # Material do item ou se data: 1 , coloque o nome do customItem
       material: LIGHT_GRAY_WOOL
       lore:
         - "<green>Clique para selecionar"
       slot: 11
+      # Colocar apenas se quiser que na lore apareça a mensagem de no-permission
+      # Os comandos ao clicar verificam a permissão da cor no arquivo /cosmetics/chat-color.yml
+      permission:
+      # Comando executado ao clicar no item, coloque "none" para não executar nada ao clicar
+      on-click: "changeColor"
 
-    gray:
+    dark_gray:
       color: "dark_gray"
       name: "Cinza"
       data: 0
@@ -29,135 +37,185 @@ settings:
       lore:
         - "<green>Clique para selecionar"
       slot: 12
+      permission:
+      on-click: "changeColor"
 
     black:
-      color: "black"
+      color: "#000000"
       name: "Preto"
       data: 0
       material: BLACK_WOOL
       lore:
         - "<green>Clique para selecionar"
       slot: 13
+      permission:
+      on-click: "changeColor"
 
     brown:
-      color: "brown"
+      color: "#9e4f3e"
       name: "Marrom"
       data: 0
       material: BROWN_WOOL
       lore:
         - "<green>Clique para selecionar"
       slot: 14
+      permission:
+      on-click: "changeColor"
 
     red:
-      color: "dark-red"
+      color: "dark_red"
       name: "Vermelho"
       data: 0
       material: RED_WOOL
       lore:
         - "<green>Clique para selecionar"
       slot: 15
+      permission:
+      on-click: "changeColor"
 
-      orange:
-        color: "orange"
-        name: "Laranja"
-        data: 0
-        material: ORANGE_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 20
+    orange:
+      color: "#FF5733"
+      name: "Laranja"
+      data: 0
+      material: ORANGE_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 20
+      permission:
+      on-click: "changeColor"
 
-      light-green:
-        color: "green"
-        name: "Verde Claro"
-        data: 0
-        material: LIME_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 21
+    green:
+      color: "green"
+      name: "Verde"
+      data: 0
+      material: LIME_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 21
+      permission:
+      on-click: "changeColor"
 
-      green:
-        color: "dark-green"
-        name: "Verde"
-        data: 0
-        material: GREEN_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 22
+    dark_green:
+      color: "dark_green"
+      name: "Verde Escuro"
+      data: 0
+      material: GREEN_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 22
+      permission:
+      on-click: "changeColor"
 
-      cyan:
-        color: "dark-aqua"
-        name: "Ciano"
-        data: 0
-        material: CYAN_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 23
+    cyan:
+      color: "dark_aqua"
+      name: "Ciano"
+      data: 0
+      material: CYAN_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 23
+      permission:
+      on-click: "changeColor"
 
-      light-blue:
-        color: "aqua"
-        name: "Azul Claro"
-        data: 0
-        material: LIGHT_BLUE_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 24
+    light-blue:
+      color: "aqua"
+      name: "Azul Claro"
+      data: 0
+      material: LIGHT_BLUE_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 24
+      permission:
+      on-click: "changeColor"
 
-      blue:
-        color: "blue"
-        name: "Azul"
-        data: 0
-        material: BLUE_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 29
+    blue:
+      color: "blue"
+      name: "Azul"
+      data: 0
+      material: BLUE_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 29
+      permission:
+      on-click: "changeColor"
 
-      purple:
-        color: "dark-purple"
-        name: "Roxo"
-        data: 0
-        material: PURPLE_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 30
+    purple:
+      color: "dark_purple"
+      name: "Roxo"
+      data: 0
+      material: PURPLE_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 30
+      permission:
+      on-click: "changeColor"
 
-      magenta:
-        color: "purple"
-        name: "Magenta"
-        data: 0
-        material: MAGENTA_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 31
+    magenta:
+      color: "light_purple"
+      name: "Magenta"
+      data: 0
+      material: MAGENTA_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 31
+      permission:
+      on-click: "changeColor"
 
-      yellow:
-        color: "gold"
-        name: "Amarelo"
-        data: 0
-        material: YELLOW_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 32
+    yellow:
+      color: "gold"
+      name: "Dourado"
+      data: 0
+      material: YELLOW_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 32
+      permission:
+      on-click: "changeColor"
 
-      white:
-        color: "white"
-        name: "Branco"
-        data: 0
-        material: WHITE_WOOL
-        lore:
-          - "<green>Clique para selecionar"
-        slot: 32
+    white:
+      color: "white"
+      name: "Branco"
+      data: 0
+      material: WHITE_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 33
+      permission:
+      on-click: "changeColor"
 
-      gradient:
-        color:
-          - "dark-blue"
-          - "dark-red"
-        data: 0
-        material: ORANGE_GLAZED_TERRACOTTA
-        lore:
-          - "<green>Clique para configurar"
-          - "Digite no chat as cores desejadas"
-          - "Ex.: digitar <#5e4fa2>#5e4fa2 Enter"
-          - "             <#f79459>#f79459 Enter"
-          - "             <red>red     Enter"
-          - "     <gradient:#5e4fa2:#f79459:red>Resultará nesta cor</gradient>"
-        slot: 40
+    gradient:
+      name: "Gradiente"
+      color: "<gradient:blue:red>"
+      data: 0
+      material: ORANGE_GLAZED_TERRACOTTA
+      lore:
+        - "<green>Clique para configurar"
+        - "Digite no chat as cores desejadas"
+        - "Ex.: digitar <#5e4fa2>#5e4fa2 <#f79459>#f79459 <red>vermelho"
+        - "     <gradient:#5e4fa2:#f79459:red>Resultará nesta cor</gradient>"
+      slot: 40
+      permission:
+      on-click: "changeGradient"
+
+    back:
+      color: "white"
+      name: "<!i>Voltar"
+      data: 0
+      material: KNOWLEDGE_BOOK
+      lore:
+      slot: 45
+      permission:
+      on-click: "cosmeticsMenu"
+
+    actual:
+      color: ""
+      name: "<!i>Cor Atual"
+      data: 2
+      material: PLAYER_HEAD
+      lore:
+        - "<i>[Color]Está é sua cor atual"
+      # [Color] é substituído por esse valor se o player não tiver nenhuma cor selecionada
+      no-color: ""
+      slot: 53
+      permission:
+      on-click: "none"

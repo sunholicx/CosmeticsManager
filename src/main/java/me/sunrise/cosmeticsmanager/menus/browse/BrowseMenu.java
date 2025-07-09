@@ -1,122 +1,208 @@
-package me.sunrise.cosmeticsmanager.menus;
+package me.sunrise.cosmeticsmanager.menus.browse;
 
+import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
+import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
-import me.sunrise.cosmeticsmanager.utils.ItemBuilder;
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Collectors;
 
-public class BrowseTagsMenu {
+public class BrowseMenu implements InventoryHolder {
+
+    private Inventory inventory;
 
     private final CosmeticsManager plugin;
     private final Player player;
-    private final String type; // "my", "all", "blocked"
+    private final String type;
+    private final String menuType;
     private final int page;
     private final List<String> emptySlots;
     private final int size;
     private final String menuTitle;
+    private final YamlConfiguration config;
+    private final List<CosmeticData> cosmetics;
 
-    private final Map<String, TagData> tags;
-
-    public BrowseTagsMenu(CosmeticsManager plugin, Player player, String type, int page) {
+    public BrowseMenu(CosmeticsManager plugin,
+                      Player player,
+                      String type,
+                      int page,
+                      ItemManager itemManager,
+                      YamlConfiguration browseConfig) {
         this.plugin = plugin;
         this.player = player;
         this.type = type;
         this.page = page;
-        this.tags = plugin.getTagManager().getAllTags(); // Carrega as tags
-        this.emptySlots = plugin.getBrowseTagsConfig().getStringList("settings.empty-spaces");
-        this.size = plugin.getBrowseTagsConfig().getInt("settings.size");
+        this.config = browseConfig;
+        this.cosmetics = itemManager.getAllCosmetics();
+        this.emptySlots = config.getStringList("settings.empty-spaces");
+        this.size = config.getInt("settings.size", 27);
+        this.menuType = config.getString("settings.type");
 
-        String titleTemplate = plugin.getBrowseTagsConfig().getString("settings." + type, "Tags");
-        String pageSuffix = plugin.getBrowseTagsConfig().getString("settings.page", " - Página [n]");
-        this.menuTitle = MiniMessage.miniMessage().deserialize(
+        String titleTemplate = config.getString("settings." + type, "");
+        String pageSuffix = config.getString("settings.page", " - Página [n]");
+
+        Component component = MiniMessage.miniMessage().deserialize(
                 titleTemplate + pageSuffix.replace("[n]", String.valueOf(page))
-        ).toString();
+        );
+
+        this.menuTitle = LegacyComponentSerializer.legacySection().serialize(component);
     }
 
+    /**
+     * Abre o menu para o jogador
+     */
     public void open() {
-        Inventory inv = Bukkit.createInventory(null, size, menuTitle);
+        inventory = Bukkit.createInventory(this, size, menuTitle);
 
-        // Filtrar as tags de acordo com o tipo
-        List<TagData> filteredTags = getFilteredTags();
+        List<CosmeticData> filteredCosmetics = getFilteredCosmetics();
 
-        // Paginar
-        int tagsPerPage = size - emptySlots.size() - 3; // Reservando slots de botões
-        int startIndex = (page - 1) * tagsPerPage;
-        int endIndex = Math.min(startIndex + tagsPerPage, filteredTags.size());
-        List<TagData> pageTags = filteredTags.subList(startIndex, endIndex);
+        int cosmeticsPerPage = size - emptySlots.size() - 3;
+        int startIndex = (page - 1) * cosmeticsPerPage;
+        int endIndex = Math.min(startIndex + cosmeticsPerPage, filteredCosmetics.size());
+        List<CosmeticData> pageCosmetics = filteredCosmetics.subList(startIndex, endIndex);
 
-        // Preencher itens de tags
         int slot = 0;
-        for (TagData tag : pageTags) {
+        for (CosmeticData cosmetic : pageCosmetics) {
             while (emptySlots.contains(String.valueOf(slot)) && slot < size) {
                 slot++;
             }
-            inv.setItem(slot, buildTagItem(tag));
+            inventory.setItem(slot, buildCosmeticItem(cosmetic));
             slot++;
         }
 
-        // Botão de voltar página
+        // Botões de navegação
         if (page > 1) {
-            inv.setItem(
-                    plugin.getBrowseTagsConfig().getInt("settings.items.back.slot"),
+            inventory.setItem(
+                    config.getInt("settings.items.back.slot"),
                     buildButton("back")
             );
         }
-        // Botão de próxima página
-        if (endIndex < filteredTags.size()) {
-            inv.setItem(
-                    plugin.getBrowseTagsConfig().getInt("settings.items.next.slot"),
+        if (endIndex < filteredCosmetics.size()) {
+            inventory.setItem(
+                    config.getInt("settings.items.next.slot"),
                     buildButton("next")
             );
         }
-        // Botão de menu
-        inv.setItem(
-                plugin.getBrowseTagsConfig().getInt("settings.items.menu.slot"),
+        inventory.setItem(
+                config.getInt("settings.items.menu.slot"),
                 buildButton("menu")
         );
 
-        player.openInventory(inv);
+        player.openInventory(inventory);
+
+        // Textura
+        String texture = config.getString("settings.texture");
+        if (texture != null && !texture.isEmpty()) {
+            FontImageWrapper tex = new FontImageWrapper(texture);
+            if (tex.exists()) {
+                TexturedInventoryWrapper.setPlayerInventoryTexture(player, tex, menuTitle);
+            } else {
+                Bukkit.getConsoleSender().sendMessage("Textura " + texture + " não encontrada.");
+            }
+        }
     }
 
-    private List<TagData> getFilteredTags() {
-        return tags.values().stream()
-                .filter(tag -> {
-                    boolean hasPermission = tag.permission == null || tag.permission.isEmpty() || player.hasPermission(tag.permission);
-                    if (type.equalsIgnoreCase("my")) return hasPermission;
-                    if (type.equalsIgnoreCase("blocked")) return !hasPermission;
-                    return true; // "all"
+    /**
+     * Filtra os cosméticos de acordo com o tipo
+     */
+    private List<CosmeticData> getFilteredCosmetics() {
+        return cosmetics.stream()
+                .filter(cosmetic -> {
+                    String permission = cosmetic.getPermission();
+                    if (permission == null || permission.isEmpty() || type.equalsIgnoreCase("all")) {
+                        if (type.equalsIgnoreCase("all")) {
+                            return true;
+                        } else if (type.equalsIgnoreCase("my")) {
+                            return true;
+                        } else if (type.equalsIgnoreCase("blocked")) {
+                            return false;
+                        }
+
+                    }
+                    if (type.equalsIgnoreCase("my")) {
+                        return player.hasPermission(permission);
+                    }
+                    if (type.equalsIgnoreCase("blocked")) {
+                        return !player.hasPermission(permission);
+                    }
+                    return false;
                 })
+                .sorted(Comparator.comparing(this::getPlainName))
                 .collect(Collectors.toList());
     }
 
-    private ItemStack buildTagItem(TagData tag) {
-        boolean hasPermission = tag.permission == null || tag.permission.isEmpty() || player.hasPermission(tag.permission);
+    /**
+     * Cria o item visual do cosmético
+     */
+    private ItemStack buildCosmeticItem(CosmeticData cosmetic) {
+        boolean hasPermission = cosmetic.getPermission() == null
+                || cosmetic.getPermission().isEmpty()
+                || player.hasPermission(cosmetic.getPermission());
+
         List<String> lore = new ArrayList<>();
         if (!hasPermission) {
-            lore.add(plugin.getBrowseTagsConfig().getString("settings.no-permission"));
+            lore.add(config.getString("settings.no-permission"));
         } else {
-            lore.addAll(tag.lore);
+            lore.addAll(cosmetic.getLore());
         }
-        return ItemBuilder.of(tag)
-                .setName(tag.tag)
+
+        return ItemBuilder.of(cosmetic)
+                .setName(cosmetic.getName())
                 .setLore(lore)
                 .build();
     }
 
+    /**
+     * Cria um botão padrão do menu
+     */
     private ItemStack buildButton(String key) {
         String path = "settings.items." + key;
         return ItemBuilder.of(
-                plugin.getBrowseTagsConfig().getInt(path + ".data"),
-                plugin.getBrowseTagsConfig().getString(path + ".material"),
-                plugin.getBrowseTagsConfig().getString(path + ".name"),
-                plugin.getBrowseTagsConfig().getStringList(path + ".lore")
+                config.getInt(path + ".data"),
+                config.getString(path + ".material"),
+                config.getString(path + ".name"),
+                config.getStringList(path + ".lore")
         ).build();
+    }
+
+    public String getMenuType() {
+        return menuType;
+    }
+
+    /**
+     * Retorna string segura (nunca null)
+     */
+    private String safe(String input) {
+        return input == null ? "" : input;
+    }
+
+    @Override
+    @NotNull
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    /**
+     * Obtém o nome em texto puro para ordenação
+     */
+    private String getPlainName(CosmeticData cosmetic) {
+        return PlainTextComponentSerializer.plainText().serialize(
+                MiniMessage.miniMessage().deserialize(
+                        safe(cosmetic.getName())
+                )
+        ).toLowerCase();
     }
 }

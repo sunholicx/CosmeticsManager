@@ -1,8 +1,8 @@
-package me.sunrise.cosmeticsmanager.menus.chat_colors;
+package me.sunrise.cosmeticsmanager.menus.main;
 
 import java.util.List;
 
-public class ChatColorItem {
+public class MenuItem {
     private final String id;
     private final Object color; // String ou List<String>
     private final String name;
@@ -14,7 +14,7 @@ public class ChatColorItem {
     private final String noPermission;
     private final String onClick;
 
-    public ChatColorItem(String id, Object color, String name, int data, String material, String permission, String noPermission, List<String> lore, int slot, String onClick) {
+    public MenuItem(String id, Object color, String name, int data, String material, String permission, String noPermission, List<String> lore, int slot, String onClick) {
         this.id = id;
         this.color = color;
         this.name = name;

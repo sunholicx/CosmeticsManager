@@ -1,10 +1,12 @@
 plugins {
+    id 'com.gradleup.shadow' version '8.3.0'
     id 'java'
     id("xyz.jpenilla.run-paper") version "2.3.1"
 }
 
 group = 'me.sunrise'
-version = '1.0-SNAPSHOT'
+version = '1.0'
+description = "Gerencia cosméticos (tags, chat color, badges) para players."
 
 repositories {
     mavenCentral()
@@ -16,10 +18,40 @@ repositories {
         name = "sonatype"
         url = "https://oss.sonatype.org/content/groups/public/"
     }
+    maven {
+        name = "matteodev"
+        url = "https://maven.devs.beer"
+    }
+    // Placeholder API
+    maven {
+        url = 'https://repo.extendedclip.com/releases/'
+    }
+    // Annotation Command Framework
+    maven {
+        url = "https://repo.aikar.co/content/groups/aikar/" }
+}
+
+compileJava {
+    options.compilerArgs += ["-parameters"]
+    options.fork = true
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
+    implementation "net.kyori:adventure-text-minimessage:4.22.0"
+    compileOnly "dev.lone:api-itemsadder:4.0.10"
+    compileOnly 'me.clip:placeholderapi:2.11.6'
+    compileOnly "co.aikar:acf-paper:0.5.1-SNAPSHOT"
+    implementation "co.aikar:acf-paper:0.5.1-SNAPSHOT"
+}
+
+shadowJar {
+    relocate 'co.aikar.commands', 'me.sunrise.cosmeticsmanager.acf'
+    relocate 'co.aikar.locales', 'me.sunrise.cosmeticsmanager.locales'
+}
+
+tasks.named("build") {
+    dependsOn "shadowJar"
 }
 
 tasks {

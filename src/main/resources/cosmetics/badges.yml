@@ -1,0 +1,29 @@
+# Comando executado ao clicar na badge
+on-click: "setBadge"
+# Lore que aparece se a badge for a badge atual do player
+selected:
+  - "<green>Selecionada"
+# Lore que aparece quando o player não tem a badge
+no-permission:
+  - "<red>Bloqueada"
+
+# Registre todas as badges aqui
+cosmetics:
+  pescador:
+    # Tag
+    name: "<blue>[Coração]"
+    # Valor de data é sempre 1, apenas itemsAdder funcionam como emoji
+    data: 1
+    # Textura: "yourPack:emoji"
+    material: "twitteremojis:heart"
+    lore:
+      - "<green>Clique para selecionar."
+    permission: "cosmetics.badge.use"
+
+  pescadora:
+    name: "<blue>[Hashtag]"
+    data: 1
+    material: "twitteremojis:hashtag"
+    lore:
+      - "<green>Clique para selecionar."
+    permission: "cosmetics.badge.use"

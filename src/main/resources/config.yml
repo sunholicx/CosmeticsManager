@@ -1,0 +1,122 @@
+# Toda formatação de texto deve ser feita em MiniMessage, evite formatações como & e §, elas causam erro
+
+settings:
+  # Permissão para os comandos reloadplg (recarrega o plugin), reload (recarrega as configurações) e reloadcache (limpa o cache e recarrega os dados apenas dos players online)
+  admin-permission: "admin"
+  commands:
+    cosmetics:
+      description: "Abre o menu de cosméticos"
+      aliases:
+        - "cm"
+        - "cosmeticos"
+
+    chatcolor:
+      description: "Abre o menu de chat colors"
+      aliases:
+      subcommand:
+        set:
+          description: "Define a cor do chat"
+          aliases:
+          invalid-hex: "<red>Formato inválido. Use por exemplo: #ff0000"
+          invalid-color: "<red>Esta cor não existe. Use uma cor válida"
+          no-hex-permission: "<red>Você não tem permissão para cores HEX."
+          no-basics-permission: "<red>Você não tem permissão para esta cor."
+          success: "<green>Sua cor foi definida como: [Cor]"
+        gradient:
+          description: "Configura um gradiente como cor do chat"
+          aliases:
+            - "gradiente"
+          # Mensagens que aparecem para o player ao usar o comando
+          msg1: "<white>Informe as cores. Ex.: \"azul branco #ff0000\""
+          msg2: "<white>Máximo: 4 cores  |  Digite \"sair\" para cancelar"
+          no-gradient-permission: "<red>Você não tem permissão para usar gradiente."
+        colors:
+          description: "Mostra todas as cores disponíveis"
+          aliases:
+            - "cores"
+          # Mensagem que aparece para o player ao usar o comando, em seguida as cores registrada em /cosmetics/chat-colors.yml são listadas
+          msg: "<white>Cores disponíveis:"
+        remove:
+          aliases:
+          description: "Remove cor de chat do player"
+
+    tags:
+      description: "Abre o menu de tags"
+      aliases:
+        - "tag"
+      subcommand:
+        owned:
+          aliases:
+          description: "Abre o menu de tags que o player possui."
+        all:
+          aliases:
+          description: "Abre o menu de todas as tags"
+        blocked:
+          aliases:
+          description: "Abre o menu de tags bloqueadas do player."
+        set:
+          aliases:
+          description: "Define tag do player."
+          invalid-tag: "<red>Essa tag não existe."
+          no-permission: "<red>Você não tem permissão para usar essa tag."
+          success: "<green>Sua tag foi definida como: [Tag]"
+        remove:
+          aliases:
+          description: "Remove tag do player"
+
+    badges:
+      description: "Abre o menu de badges"
+      aliases:
+        - "badge"
+      subcommand:
+        owned:
+          aliases:
+          description: "Abre o menu de badges que o player possui."
+        all:
+          aliases:
+          description: "Abre o menu de todas as badges"
+        blocked:
+          aliases:
+          description: "Abre o menu de badges bloqueadas do player."
+        set:
+          aliases:
+          description: "Define badge do player."
+          invalid-badge: "<red>Essa badge não existe."
+          no-permission: "<red>Você não tem permissão para usar essa badge."
+          success: "<green>Sua badge foi definida como: [Badge]"
+        remove:
+          aliases:
+          description: "Remove badge do player"
+
+  listeners:
+    # Mensagem exibida ao clicar em um menu sem permissão
+    no-permission: "<red>Você não tem permissão."
+    gradient-setting:
+      # Valor que deve ser digitado pelo player para cancelar o comando
+      cancelArg: "sair"
+      cancel: "<red>Você cancelou a seleção de gradiente."
+      invalid-length: "<red>Máximo de 4 cores. Tente novamente."
+      success: "[openGrad]Seu gradiente foi definido![closeGrad]"
+
+  database:
+    # Qual é o prefixo da tabela para o banco de dados?
+    # Observe que se você alterar isso depois que o plugin tiver salvo os dados, o plugin não conseguirá encontrar os dados antigos.
+    table-prefix: "cometicsmanager_"
+
+    mysql:
+      # O SQL deve ser habilitado? Coloque falso para usar SQLite
+      enabled: false
+      # Se o MySQL estiver habilitado, o CosmeticManager precisa estar conectado ao banco de dados SQL. Insira seus dados.
+      # Qual é o nome do host?
+      hostname: "spigotmc.org"
+
+      # Qual é a porta?
+      port: 3306
+      # Qual é o nome do seu banco de dados?
+      database: "CosmeticsManger"
+      # Qual é o nome de usuário do seu banco de dados?
+      username: "root"
+      # Qual é a senha do seu banco de dados?
+      password: "root"
+      # Adicione argumentos extras ao seu URL de conexão do MySQL.
+      arguments: "?characterEncoding=utf8&useSSL=true"

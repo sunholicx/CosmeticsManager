@@ -1,0 +1,114 @@
+# Permissão para as cores básicas
+permission:
+gradient-permission: "cosmetics.chatcolor.gradient"
+hex-permission:
+colors:
+  gray: # Nome da cor, mesmo usado para configurar o menu
+    # Nome que aparece no comando /chatcolors colors
+    displayName: "Cinza"
+    # Valores que devem funcionar como argumento no comando /chatcolor set. O comando não é case sensitive.
+    aliases:
+      - "gray"
+    # Código da cor
+    value: "gray"
+
+  dark_gray:
+    displayName: "CinzaEscuro"
+    aliases:
+      - "Cinza_Escuro"
+      - "dark_gray"
+    value: "dark_gray"
+
+  preto:
+    displayName: "Preto"
+    aliases:
+      - "black"
+    value: "black"
+
+  brown:
+    displayName: "Marrom"
+    aliases:
+      - "Brown"
+    value: "#9e4f3e"
+
+  red:
+    displayName: "Vermelho"
+    aliases:
+      - "Red"
+      - "dark_red"
+    value: "dark_red"
+
+  orange:
+    displayName: "Laranja"
+    aliases:
+      - "Orange"
+    value: "#FF5733"
+
+  green:
+    displayName: "Verde"
+    aliases:
+      - "Green"
+    value: "green"
+
+  dark_green:
+    displayName: "VerdeEscuro"
+    aliases:
+      - "DarkGreen"
+      - "Verde_escuro"
+      - "dark_green"
+    value: "dark_green"
+
+  cyan:
+    displayName: "Ciano"
+    aliases:
+      - "Cyan"
+      - "dark_aqua"
+    value: "dark_aqua"
+
+  light-blue:
+    displayName: "AzulClaro"
+    aliases:
+      - "Azul_Claro"
+      - "LightBlue"
+      - "Light_Blue"
+      - "aqua"
+    value: "aqua"
+
+  blue:
+    displayName: "Azul"
+    aliases:
+      - "Blue"
+    value: "blue"
+
+  purple:
+    displayName: "Roxo"
+    aliases:
+      - "Purple"
+      - "dark_purple"
+    value: "dark_purple"
+
+  magenta:
+    displayName: "Magenta"
+    aliases:
+      - "light_Purple"
+    value: "light_purple"
+
+  yellow:
+    displayName: "Dourado"
+    aliases:
+      - "Amarelo"
+      - "Gold"
+      - "Yellow"
+    value: "gold"
+
+  white:
+    displayName: "Branco"
+    aliases:
+      - "White"
+    value: "white"
+
+  gradient:
+    displayName: "Gradiente"
+    aliases:
+      - "gradient"
+    
