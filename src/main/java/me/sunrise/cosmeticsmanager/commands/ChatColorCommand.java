@@ -51,15 +51,20 @@ public class ChatColorCommand extends BaseCommand {
             }
 
             // Verifica permissão
-            String hexPermission = config.getPermission("hex");
-            if (hexPermission != null && !player.hasPermission(hexPermission)) {
-                player.sendMessage(
-                        MiniMessage.miniMessage().deserialize(
-                                plugin.getConfig().getString(path + "no-hex-permission")
-                        )
-                );
-                return;
+            boolean isHexBasicColor = config.isValidColor(hex);
+
+            if (!isHexBasicColor) {
+                String hexPermission = config.getPermission("hex");
+                if (hexPermission != null && !player.hasPermission(hexPermission)) {
+                    player.sendMessage(
+                            MiniMessage.miniMessage().deserialize(
+                                    plugin.getConfig().getString(path + "no-hex-permission")
+                            )
+                    );
+                    return;
+                }
             }
+
 
             String finalValue = "<" + hex + ">";
             plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), finalValue);

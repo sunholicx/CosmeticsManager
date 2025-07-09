@@ -2,6 +2,8 @@
 permission:
 gradient-permission: "cosmetics.chatcolor.gradient"
 hex-permission:
+
+# Todas as cores registradas aqui funcionam com a permission de cores básicas
 colors:
   gray: # Nome da cor, mesmo usado para configurar o menu
     # Nome que aparece no comando /chatcolors colors
@@ -19,7 +21,7 @@ colors:
       - "dark_gray"
     value: "dark_gray"
 
-  preto:
+  black:
     displayName: "Preto"
     aliases:
       - "black"

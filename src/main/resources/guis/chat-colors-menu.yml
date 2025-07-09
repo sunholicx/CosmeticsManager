@@ -41,7 +41,7 @@ settings:
       on-click: "changeColor"
 
     black:
-      color: "#000000"
+      color: "black"
       name: "Preto"
       data: 0
       material: BLACK_WOOL

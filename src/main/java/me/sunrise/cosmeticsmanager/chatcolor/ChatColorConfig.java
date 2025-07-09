@@ -9,9 +9,11 @@ import java.util.List;
 public class ChatColorConfig {
 
     private final YamlConfiguration config;
+    private final CosmeticsManager plugin;
 
     public ChatColorConfig(CosmeticsManager plugin) {
-        config = plugin.getChatColorsYml();
+        this.config = plugin.getChatColorsYml();
+        this.plugin = plugin;
 
     }
 
@@ -20,7 +22,6 @@ public class ChatColorConfig {
 
         for (String key : config.getConfigurationSection("colors").getKeys(false)) {
             String displayName = config.getString("colors." + key + ".displayName", "").toLowerCase();
-
             if (input.equals(displayName)) {
                 return true;
             }
@@ -30,6 +31,16 @@ public class ChatColorConfig {
                 if (input.equals(alias.toLowerCase())) {
                     return true;
                 }
+            }
+
+            String colorValue = config.getString("colors." + key + ".value", "").toLowerCase();
+            if (input.equals(colorValue)) {
+                return true;
+            }
+
+            colorValue = plugin.getChatColorsMenuYml().getString("settings.items" + key + ".color", "").toLowerCase();
+            if (input.equals(colorValue)) {
+                return true;
             }
         }
 
