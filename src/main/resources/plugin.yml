@@ -1,0 +1,4 @@
+name: CosmeticsManager
+version: '1.0-SNAPSHOT'
+main: me.sunrise.cosmeticsManager.CosmeticsManager
+api-version: '1.21'

@@ -1,0 +1,163 @@
+settings:
+  name: "chatcolors"
+  title: "<red>Chat Colors"
+  # Tamanho da GUI. Apenas multiplos de 9 até 54
+  size: 54
+  # Nome do arquivo da textura no ItemsAdder
+  texture: "blank_menu"
+  # Espaços em branco
+  empty-slots: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 17, 16, 18, 19, 25, 26, 27, 28, 34, 35, 36, 37, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
+
+  colors-items:
+    light_gray: # Nome da cor
+      # Cor do chat ex.: "red "ou "#ff0000
+      color: "gray"
+      name: "Cinza Claro"
+      # 0 - Minecraft | 1 - ItemsAdder
+      data: 0
+      # Material do item ou se data: 1 , coloque o nome do customItem
+      material: LIGHT_GRAY_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 11
+
+    gray:
+      color: "dark_gray"
+      name: "Cinza"
+      data: 0
+      material: GRAY_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 12
+
+    black:
+      color: "black"
+      name: "Preto"
+      data: 0
+      material: BLACK_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 13
+
+    brown:
+      color: "brown"
+      name: "Marrom"
+      data: 0
+      material: BROWN_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 14
+
+    red:
+      color: "dark-red"
+      name: "Vermelho"
+      data: 0
+      material: RED_WOOL
+      lore:
+        - "<green>Clique para selecionar"
+      slot: 15
+
+      orange:
+        color: "orange"
+        name: "Laranja"
+        data: 0
+        material: ORANGE_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 20
+
+      light-green:
+        color: "green"
+        name: "Verde Claro"
+        data: 0
+        material: LIME_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 21
+
+      green:
+        color: "dark-green"
+        name: "Verde"
+        data: 0
+        material: GREEN_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 22
+
+      cyan:
+        color: "dark-aqua"
+        name: "Ciano"
+        data: 0
+        material: CYAN_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 23
+
+      light-blue:
+        color: "aqua"
+        name: "Azul Claro"
+        data: 0
+        material: LIGHT_BLUE_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 24
+
+      blue:
+        color: "blue"
+        name: "Azul"
+        data: 0
+        material: BLUE_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 29
+
+      purple:
+        color: "dark-purple"
+        name: "Roxo"
+        data: 0
+        material: PURPLE_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 30
+
+      magenta:
+        color: "purple"
+        name: "Magenta"
+        data: 0
+        material: MAGENTA_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 31
+
+      yellow:
+        color: "gold"
+        name: "Amarelo"
+        data: 0
+        material: YELLOW_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 32
+
+      white:
+        color: "white"
+        name: "Branco"
+        data: 0
+        material: WHITE_WOOL
+        lore:
+          - "<green>Clique para selecionar"
+        slot: 32
+
+      gradient:
+        color:
+          - "dark-blue"
+          - "dark-red"
+        data: 0
+        material: ORANGE_GLAZED_TERRACOTTA
+        lore:
+          - "<green>Clique para configurar"
+          - "Digite no chat as cores desejadas"
+          - "Ex.: digitar <#5e4fa2>#5e4fa2 Enter"
+          - "             <#f79459>#f79459 Enter"
+          - "             <red>red     Enter"
+          - "     <gradient:#5e4fa2:#f79459:red>Resultará nesta cor</gradient>"
+        slot: 40
