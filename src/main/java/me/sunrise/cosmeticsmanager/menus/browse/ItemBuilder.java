@@ -24,8 +24,6 @@ public class ItemBuilder {
             // ItemsAdder
             CustomStack customStack = CustomStack.getInstance(cosmetic.getMaterial());
             stack = customStack != null ? customStack.getItemStack().clone() : new ItemStack(Material.BARRIER);
-        } else if (cosmetic.getData() == 2) {
-            stack = new ItemStack(Material.PLAYER_HEAD);
         } else {
             stack = new ItemStack(Material.BARRIER);
         }

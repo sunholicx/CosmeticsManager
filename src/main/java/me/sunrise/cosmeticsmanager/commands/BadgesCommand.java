@@ -107,11 +107,11 @@ public class BadgesCommand extends BaseCommand {
         }
 
         // Salva mudanças
-        plugin.getDatabaseManager().savePlayerBadge(player.getUniqueId().toString(), badge.getName());
-        plugin.getCache().setBadge(player.getUniqueId(), badge.getName());
+        plugin.getDatabaseManager().savePlayerBadge(player.getUniqueId().toString(), badge.getEmoji());
+        plugin.getCache().setBadge(player.getUniqueId(), badge.getEmoji());
         player.sendMessage(
                 MiniMessage.miniMessage().deserialize(
-                        plugin.getConfig().getString(path + "success").replace("[Badge]", badge.getName())
+                        plugin.getConfig().getString(path + "success").replace("[Badge]", badge.getEmoji())
                 )
         );
     }

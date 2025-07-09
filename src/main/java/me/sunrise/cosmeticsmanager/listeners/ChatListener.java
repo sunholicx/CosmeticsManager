@@ -28,10 +28,6 @@ public class ChatListener implements Listener {
         String color = cache.get(player.getUniqueId()).getChatColor();
         String tag = cache.get(player.getUniqueId()).getTag();
         String badgeName = cache.get(player.getUniqueId()).getBadge();
-        CosmeticData badge = plugin.getBadgesManager().getAllCosmetics().stream()
-                .filter(i -> Objects.equals(getPlainName(i).toLowerCase(), badgeName))
-                .findFirst()
-                .orElse(null);
 
 
         if (plugin.getGradientInputManager().isAwaiting(player)) {
@@ -56,19 +52,8 @@ public class ChatListener implements Listener {
 
         // Componentes
         Component messageComponent = MiniMessage.miniMessage().deserialize(formattedMessage);
-        String badgeTex;
 
-        Component badgeComponent = Component.empty();
-        if (badge != null) {
-            FontImageWrapper badgeIcon = new FontImageWrapper(badge.getMaterial());
-            if (badgeIcon.exists()) {
-                badgeTex = badgeIcon.getString();
-                badgeComponent = Component.text(badgeTex).append(Component.space());
-            } else {
-                // Opcional fallback: texto no lugar
-                badgeComponent = Component.text("???").append(Component.space());
-            }
-        }
+        Component badgeComponent = Component.text(badgeName).append(Component.space());
 
         Component tagComponent = Component.empty();
         if (tag != null && !tag.isEmpty()) { // Coloca tag se existir

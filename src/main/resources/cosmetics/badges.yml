@@ -11,11 +11,12 @@ no-permission:
 cosmetics:
   pescador:
     # Tag
-    name: "<blue>[Coração]"
-    # Valor de data é sempre 1, apenas itemsAdder funcionam como emoji
+    name: "<blue>Admin"
+    emoji: ":admin:"
+    # 0 - Material do minecraft | 1 - ItemsAdder
     data: 1
-    # Textura: "yourPack:emoji"
-    material: "twitteremojis:heart"
+    # Textura do item que aparece no menu
+    material: "mcicons:icon_refresh"
     lore:
       - "<green>Clique para selecionar."
     permission: "cosmetics.badge.use"
@@ -23,7 +24,7 @@ cosmetics:
   pescadora:
     name: "<blue>[Hashtag]"
     data: 1
-    material: "twitteremojis:hashtag"
+    material: "mcicons:icon_refresh"
     lore:
       - "<green>Clique para selecionar."
     permission: "cosmetics.badge.use"

@@ -201,7 +201,7 @@ public class BrowseMenu implements InventoryHolder {
     private String getPlainName(CosmeticData cosmetic) {
         return PlainTextComponentSerializer.plainText().serialize(
                 MiniMessage.miniMessage().deserialize(
-                        safe(cosmetic.getName())
+                        safe(cosmetic.getName()).replace("[", "").replace("]", "")
                 )
         ).toLowerCase();
     }

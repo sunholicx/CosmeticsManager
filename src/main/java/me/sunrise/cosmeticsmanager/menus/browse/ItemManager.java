@@ -34,6 +34,7 @@ public class ItemManager {
                     String material = cosmeticSec.getString("material", "BARRIER");
                     List<String> lore = cosmeticSec.getStringList("lore");
                     String permission = cosmeticSec.getString("permission", "");
+                    String emoji = cosmeticSec.getString("emoji", "");
 
                     CosmeticData cosmeticData = new CosmeticData(
                             id,
@@ -42,7 +43,8 @@ public class ItemManager {
                             material,
                             lore,
                             permission,
-                            onClickCommand
+                            onClickCommand,
+                            emoji
                     );
 
                     cosmeticMap.put(id, cosmeticData);

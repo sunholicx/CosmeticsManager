@@ -174,10 +174,7 @@ public class Menu implements InventoryHolder {
                         .orElse(null);
 
                 if (badge != null) {
-                    FontImageWrapper badgeIcon = new FontImageWrapper(badge.getMaterial());
-                    if (badgeIcon.exists()) {
-                        badgeValue = badgeIcon.getString();
-                    }
+                    badgeValue = badge.getName();
                 }
             }
 
@@ -226,7 +223,7 @@ public class Menu implements InventoryHolder {
     private String getPlainName(CosmeticData cosmetic) {
         return PlainTextComponentSerializer.plainText().serialize(
                 MiniMessage.miniMessage().deserialize(
-                        cosmetic.getName()
+                        cosmetic.getEmoji()
                 )
         ).toLowerCase();
     }
