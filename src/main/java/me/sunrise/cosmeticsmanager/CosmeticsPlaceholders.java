@@ -61,13 +61,12 @@ public class CosmeticsPlaceholders extends PlaceholderExpansion {
                 return badge != null ? badge : "";
             case "tag":
                 if (tag != null && !tag.isEmpty()) {
-                    tag = LegacyComponentSerializer.legacySection().serialize(MiniMessage.miniMessage().deserialize(tag));
+                    tag = tag + "<reset>" ;
                     return tag;
                 }
                 return "";
             case "chatcolor":
                 if (chatColor != null && !chatColor.isEmpty()) {
-                    chatColor = LegacyComponentSerializer.legacySection().serialize(MiniMessage.miniMessage().deserialize(chatColor));
                     return chatColor;
                 }
                 return "";
