@@ -4,7 +4,7 @@ main: me.sunrise.cosmeticsmanager.CosmeticsManager
 api-version: '1.21.4'
 description: Gerencia cosméticos (tags, chat color, badges) para players.
 author: Sunrise
-depend:
+depend: [PlaceholderAPI, ItemsAdder]
 commands:
   cosmetics:
     description: Menu de cosméticos.

@@ -8,7 +8,6 @@ import me.sunrise.cosmeticsmanager.commands.CosmeticsCommand;
 import me.sunrise.cosmeticsmanager.commands.TagsCommand;
 import me.sunrise.cosmeticsmanager.chatcolor.ChatColorConfig;
 import me.sunrise.cosmeticsmanager.listeners.MenuClickListener;
-import me.sunrise.cosmeticsmanager.listeners.ChatListener;
 import me.sunrise.cosmeticsmanager.listeners.GradientChatListener;
 import me.sunrise.cosmeticsmanager.listeners.PlayerJoinListener;
 import me.sunrise.cosmeticsmanager.menus.browse.ItemManager;
@@ -66,6 +65,8 @@ public final class CosmeticsManager extends JavaPlugin {
 
         registerCommands();
         registerListeners();
+
+        new CosmeticsPlaceholders(this).register();
 
         getLogger().info("Cosmetics Manager inicializado!");
 
@@ -144,7 +145,6 @@ public final class CosmeticsManager extends JavaPlugin {
     public void registerListeners() {
         getServer().getPluginManager().registerEvents(new MenuClickListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
-        getServer().getPluginManager().registerEvents(new ChatListener(this), this);
         getServer().getPluginManager().registerEvents(new GradientChatListener(this), this);
 
     }
