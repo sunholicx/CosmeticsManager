@@ -1,22 +1,27 @@
 package me.sunrise.cosmeticsmanager.listeners;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
 import me.sunrise.cosmeticsmanager.chatcolor.ChatColorConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+
 
 public class GradientChatListener implements Listener {
 
     private final CosmeticsManager plugin;
 
+
     public GradientChatListener(CosmeticsManager plugin) {
         this.plugin = plugin;
     }
 
-    @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onChat(AsyncChatEvent event) {
         var player = event.getPlayer();
         var manager = plugin.getGradientInputManager();
 
@@ -25,9 +30,10 @@ public class GradientChatListener implements Listener {
         }
 
         event.setCancelled(true); // não mostrar a mensagem no chat público
+        event.viewers().clear();
 
         // Pega e formata mensagem do player
-        String message = event.getMessage().trim();
+        String message = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
         player.sendMessage(message);
         message = message.toLowerCase();
 
@@ -56,7 +62,10 @@ public class GradientChatListener implements Listener {
 
         // Verifica se apenas uma cor foi escolhida
         if (parts.length == 1) {
-            player.performCommand("chatcolor set " + message);
+            String finalMessage = message;
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                player.performCommand("chatcolor set " + finalMessage);
+            });
             return;
         }
 
