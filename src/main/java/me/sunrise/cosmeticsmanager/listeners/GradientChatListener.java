@@ -7,7 +7,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 
 
@@ -20,7 +19,7 @@ public class GradientChatListener implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    @EventHandler
     public void onChat(AsyncChatEvent event) {
         var player = event.getPlayer();
         var manager = plugin.getGradientInputManager();
@@ -34,7 +33,6 @@ public class GradientChatListener implements Listener {
 
         // Pega e formata mensagem do player
         String message = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
-        player.sendMessage(message);
         message = message.toLowerCase();
 
         // Checa se foi cancelado
