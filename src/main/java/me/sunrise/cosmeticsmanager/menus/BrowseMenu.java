@@ -1,8 +1,9 @@
-package me.sunrise.cosmeticsmanager.menus.browse;
+package me.sunrise.cosmeticsmanager.menus;
 
 import dev.lone.itemsadder.api.FontImages.FontImageWrapper;
 import dev.lone.itemsadder.api.FontImages.TexturedInventoryWrapper;
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
+import me.sunrise.cosmeticsmanager.storage.PlayerCosmetics;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -18,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class BrowseMenu implements InventoryHolder {
@@ -29,18 +31,21 @@ public class BrowseMenu implements InventoryHolder {
     private final String type;
     private final String menuType;
     private final int page;
-    private final List<String> emptySlots;
     private final int size;
     private final String menuTitle;
-    private final YamlConfiguration config;
-    private final List<CosmeticData> cosmetics;
 
-    public BrowseMenu(CosmeticsManager plugin,
-                      Player player,
-                      String type,
-                      int page,
-                      ItemManager itemManager,
-                      YamlConfiguration browseConfig) {
+    private final List<String> emptySlots;
+    private final YamlConfiguration config;
+    private final List<MenuItem> cosmetics;
+
+    public BrowseMenu(
+            CosmeticsManager plugin,
+            Player player,
+            String type,
+            int page,
+            MenuConfig itemManager,
+            YamlConfiguration browseConfig
+    ) {
         this.plugin = plugin;
         this.player = player;
         this.type = type;
@@ -57,25 +62,26 @@ public class BrowseMenu implements InventoryHolder {
         Component component = MiniMessage.miniMessage().deserialize(
                 titleTemplate + pageSuffix.replace("[n]", String.valueOf(page))
         );
-
         this.menuTitle = LegacyComponentSerializer.legacySection().serialize(component);
     }
 
     /**
-     * Abre o menu para o jogador
+     * Abre o menu para o player
      */
     public void open() {
         inventory = Bukkit.createInventory(this, size, menuTitle);
 
-        List<CosmeticData> filteredCosmetics = getFilteredCosmetics();
+        List<MenuItem> filteredCosmetics = getFilteredCosmetics();
 
         int cosmeticsPerPage = size - emptySlots.size() - 3;
         int startIndex = (page - 1) * cosmeticsPerPage;
         int endIndex = Math.min(startIndex + cosmeticsPerPage, filteredCosmetics.size());
-        List<CosmeticData> pageCosmetics = filteredCosmetics.subList(startIndex, endIndex);
 
+        List<MenuItem> pageCosmetics = filteredCosmetics.subList(startIndex, endIndex);
+
+        // Preenche slots com cosméticos
         int slot = 0;
-        for (CosmeticData cosmetic : pageCosmetics) {
+        for (MenuItem cosmetic : pageCosmetics) {
             while (emptySlots.contains(String.valueOf(slot)) && slot < size) {
                 slot++;
             }
@@ -103,7 +109,7 @@ public class BrowseMenu implements InventoryHolder {
 
         player.openInventory(inventory);
 
-        // Textura
+        // Textura do ItemsAdder (opcional)
         String texture = config.getString("settings.texture");
         if (texture != null && !texture.isEmpty()) {
             FontImageWrapper tex = new FontImageWrapper(texture);
@@ -116,29 +122,24 @@ public class BrowseMenu implements InventoryHolder {
     }
 
     /**
-     * Filtra os cosméticos de acordo com o tipo
+     * Filtra os cosméticos de acordo com o tipo selecionado
      */
-    private List<CosmeticData> getFilteredCosmetics() {
+    private List<MenuItem> getFilteredCosmetics() {
         return cosmetics.stream()
                 .filter(cosmetic -> {
                     String permission = cosmetic.getPermission();
-                    if (permission == null || permission.isEmpty() || type.equalsIgnoreCase("all")) {
-                        if (type.equalsIgnoreCase("all")) {
-                            return true;
-                        } else if (type.equalsIgnoreCase("my")) {
-                            return true;
-                        } else if (type.equalsIgnoreCase("blocked")) {
-                            return false;
-                        }
+                    boolean hasPerm = permission == null || permission.isEmpty() || player.hasPermission(permission);
 
+                    switch (type.toLowerCase()) {
+                        case "all":
+                            return true;
+                        case "my":
+                            return hasPerm;
+                        case "blocked":
+                            return !hasPerm;
+                        default:
+                            return false;
                     }
-                    if (type.equalsIgnoreCase("my")) {
-                        return player.hasPermission(permission);
-                    }
-                    if (type.equalsIgnoreCase("blocked")) {
-                        return !player.hasPermission(permission);
-                    }
-                    return false;
                 })
                 .sorted(Comparator.comparing(this::getPlainName))
                 .collect(Collectors.toList());
@@ -147,7 +148,7 @@ public class BrowseMenu implements InventoryHolder {
     /**
      * Cria o item visual do cosmético
      */
-    private ItemStack buildCosmeticItem(CosmeticData cosmetic) {
+    private ItemStack buildCosmeticItem(MenuItem cosmetic) {
         boolean hasPermission = cosmetic.getPermission() == null
                 || cosmetic.getPermission().isEmpty()
                 || player.hasPermission(cosmetic.getPermission());
@@ -157,6 +158,18 @@ public class BrowseMenu implements InventoryHolder {
             lore.add(config.getString("settings.no-permission"));
         } else {
             lore.addAll(cosmetic.getLore());
+        }
+
+        PlayerCosmetics playerCosmetics = plugin.getCache().get(player.getUniqueId());
+        String playerTag = safe(playerCosmetics.getTag());
+        String playerBadge = safe(playerCosmetics.getBadge());
+
+        if (!playerTag.isEmpty() || !playerBadge.isEmpty()) {
+            if (playerTag.equalsIgnoreCase(safe(cosmetic.getName()))
+                    || playerBadge.equalsIgnoreCase(safe(cosmetic.getEmoji()))) {
+                lore.clear();
+                lore.addAll(plugin.getTagsYml().getStringList("selected"));
+            }
         }
 
         return ItemBuilder.of(cosmetic)
@@ -178,6 +191,9 @@ public class BrowseMenu implements InventoryHolder {
         ).build();
     }
 
+    /**
+     * Retorna o tipo do menu (tag/badge)
+     */
     public String getMenuType() {
         return menuType;
     }
@@ -189,20 +205,20 @@ public class BrowseMenu implements InventoryHolder {
         return input == null ? "" : input;
     }
 
-    @Override
-    @NotNull
-    public Inventory getInventory() {
-        return inventory;
-    }
-
     /**
      * Obtém o nome em texto puro para ordenação
      */
-    private String getPlainName(CosmeticData cosmetic) {
+    private String getPlainName(MenuItem cosmetic) {
         return PlainTextComponentSerializer.plainText().serialize(
                 MiniMessage.miniMessage().deserialize(
                         safe(cosmetic.getName()).replace("[", "").replace("]", "")
                 )
         ).toLowerCase();
+    }
+
+    @Override
+    @NotNull
+    public Inventory getInventory() {
+        return inventory;
     }
 }

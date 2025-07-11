@@ -1,4 +1,4 @@
-package me.sunrise.cosmeticsmanager.chatcolor;
+package me.sunrise.cosmeticsmanager.utils;
 
 import org.bukkit.entity.Player;
 

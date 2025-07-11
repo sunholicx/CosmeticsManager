@@ -1,12 +1,19 @@
 package me.sunrise.cosmeticsmanager.storage;
 
+/**
+ * Representa os cosméticos associados a um jogador.
+ */
 public class PlayerCosmetics {
+
     private String chatColor;
     private String tag;
     private String badge;
     private String menuType;
     private int page;
 
+    /**
+     * Construtor completo.
+     */
     public PlayerCosmetics(String chatColor, String tag, String badge, String menuType, int page) {
         this.chatColor = chatColor;
         this.tag = tag;
@@ -15,7 +22,19 @@ public class PlayerCosmetics {
         this.page = page;
     }
 
+    /**
+     * Construtor vazio padrão, útil para inicializações.
+     */
+    public PlayerCosmetics() {
+        this.chatColor = "";
+        this.tag = "";
+        this.badge = "";
+        this.menuType = "";
+        this.page = 1;
+    }
+
     // Getters e Setters
+
     public String getChatColor() {
         return chatColor;
     }

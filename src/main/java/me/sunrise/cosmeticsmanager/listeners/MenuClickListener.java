@@ -1,12 +1,10 @@
 package me.sunrise.cosmeticsmanager.listeners;
 
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
-import me.sunrise.cosmeticsmanager.menus.browse.BrowseMenu;
-import me.sunrise.cosmeticsmanager.menus.browse.CosmeticData;
-import me.sunrise.cosmeticsmanager.menus.browse.ItemManager;
-import me.sunrise.cosmeticsmanager.menus.main.MenuItem;
-import me.sunrise.cosmeticsmanager.menus.main.Menu;
-import me.sunrise.cosmeticsmanager.menus.main.MenuConfig;
+import me.sunrise.cosmeticsmanager.menus.BrowseMenu;
+import me.sunrise.cosmeticsmanager.menus.Menu;
+import me.sunrise.cosmeticsmanager.menus.MenuConfig;
+import me.sunrise.cosmeticsmanager.menus.MenuItem;
 import me.sunrise.cosmeticsmanager.storage.Cache;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -20,6 +18,7 @@ import org.bukkit.inventory.ItemStack;
 public class MenuClickListener implements Listener {
 
     private final CosmeticsManager plugin;
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     public MenuClickListener(CosmeticsManager plugin) {
         this.plugin = plugin;
@@ -30,230 +29,150 @@ public class MenuClickListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getClickedInventory() == null) return;
 
+        // Click em Menu principal
+        if (event.getClickedInventory().getHolder() instanceof Menu menu) {
+            event.setCancelled(true);
+            handleMainMenuClick(player, menu, event.getCurrentItem(), event.getRawSlot());
+        }
+        // Click em BrowseMenu
+        else if (event.getClickedInventory().getHolder() instanceof BrowseMenu browseMenu) {
+            event.setCancelled(true);
+            handleBrowseMenuClick(player, browseMenu, event.getCurrentItem(), event.getRawSlot());
+        }
+    }
 
-        String onClick;
+    private void handleMainMenuClick(Player player, Menu menu, ItemStack clicked, int slot) {
+        if (clicked == null || clicked.getType().isAir()) return;
 
-        if ((event.getClickedInventory().getHolder() instanceof Menu menu)) {
-            event.setCancelled(true); // bloqueia pegar os itens
+        MenuConfig config = getMainMenuConfig(menu.getMenuType());
+        if (config == null) return;
 
-            ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || clicked.getType().isAir()) return;
+        MenuItem clickedItem = config.getItems().stream()
+                .filter(i -> i.getSlot() == slot)
+                .findFirst()
+                .orElse(null);
+        if (clickedItem == null) return;
 
-            MenuConfig config = getMenuConfig(menu.getMenuType());
-            if (config == null) return;
+        if (!hasPermission(player, clickedItem.getPermission())) return;
 
-            // Descobre qual item foi clicado pelo slot
-            int slot = event.getRawSlot();
-            MenuItem clickedItem = config.getItems().stream()
-                    .filter(i -> i.getSlot() == slot)
-                    .findFirst()
-                    .orElse(null);
+        runMainMenuAction(player, clickedItem);
+    }
 
-            if (clickedItem == null) return;
+    private void handleBrowseMenuClick(Player player, BrowseMenu browseMenu, ItemStack clicked, int slot) {
+        if (clicked == null || clicked.getType().isAir()) return;
 
-            // Verifica permissão
-            if (clickedItem.getPermission() != null && !player.hasPermission(clickedItem.getPermission())) {
-                player.sendMessage(
-                        MiniMessage.miniMessage().deserialize(
-                                plugin.getConfig().getString("settings.listeners.no-permission")
-                        )
-                );
-                return;
-            }
+        MenuConfig itemManager = getMenuConfig(browseMenu.getMenuType());
+        if (itemManager == null) return;
 
-            onClick = clickedItem.getOnClick();
+        // Encontrar item cosmético pelo display name
+        String rawName = PlainTextComponentSerializer.plainText().serialize(clicked.displayName()).trim();
+        String displayName = rawName.length() > 2 ? rawName.substring(1, rawName.length() - 1) : rawName;
 
-            mainMenuCommands(onClick, clickedItem, player);
+        MenuItem cosmeticItem = itemManager.getAllCosmetics().stream()
+                .filter(i -> PlainTextComponentSerializer.plainText()
+                        .serialize(miniMessage.deserialize(i.getName()))
+                        .trim()
+                        .equalsIgnoreCase(displayName))
+                .findFirst()
+                .orElse(null);
 
-        } else if ((event.getClickedInventory().getHolder() instanceof BrowseMenu browseMenu)) {
-            event.setCancelled(true); // bloqueia pegar os itens
+        // Encontrar botão pelo slot
+        MenuItem buttonItem = itemManager.getAllButtons().stream()
+                .filter(i -> i.getSlot() == slot)
+                .findFirst()
+                .orElse(null);
 
-            ItemStack clicked = event.getCurrentItem();
-            if (clicked == null || clicked.getType().isAir()) return;
+        // Prioridade: cosmético
+        if (cosmeticItem != null) {
+            if (!hasPermission(player, cosmeticItem.getPermission())) return;
+            runBrowseMenuAction(player, browseMenu.getMenuType(), cosmeticItem.getOnClick(), displayName);
+        } else if (buttonItem != null) {
+            if (!hasPermission(player, buttonItem.getPermission())) return;
+            runBrowseMenuAction(player, browseMenu.getMenuType(), buttonItem.getOnClick(), "");
+        }
+    }
 
-            ItemManager itemManager = getItemManager(browseMenu.getMenuType());
-            if (itemManager == null) return;
+    private boolean hasPermission(Player player, String permission) {
+        if (permission == null || permission.isEmpty()) return true;
+        if (!player.hasPermission(permission)) {
+            player.sendMessage(miniMessage.deserialize(plugin.getConfig().getString("settings.listeners.no-permission")));
+            return false;
+        }
+        return true;
+    }
 
-            // Descobre qual item foi clicado pelo nome
-            String displayName0 = PlainTextComponentSerializer.plainText().serialize(clicked.displayName()).trim();
-            String displayName = displayName0.substring(1, displayName0.length() - 1);
+    private void runMainMenuAction(Player player, MenuItem item) {
+        String onClick = item.getOnClick();
+        player.closeInventory();
 
-            CosmeticData clickedItem1 = itemManager.getAllCosmetics().stream()
-                    .filter(i -> {
-                        String name = PlainTextComponentSerializer.plainText().serialize(
-                                MiniMessage.miniMessage().deserialize(i.getName())
-                        ).trim();
-                        return name.equalsIgnoreCase(displayName);
-                    })
-                    .findFirst()
-                    .orElse(null);
+        switch (onClick.toLowerCase()) {
+            case "changecolor" -> player.performCommand("chatcolor set " + item.getColor());
+            case "changegradient" -> player.performCommand("chatcolor gradient");
+            case "cosmeticsmenu" -> player.performCommand("cosmetics");
+            case "tagsmenu" -> player.performCommand("tags");
+            case "badgesmenu" -> player.performCommand("badges");
+            case "chatcolorsmenu" -> player.performCommand("chatcolor");
+            case "mytags" -> openBrowseMenu(player, "tags owned", "my");
+            case "alltags" -> openBrowseMenu(player, "tags all", "all");
+            case "blockedtags" -> openBrowseMenu(player, "tags blocked", "blocked");
+            case "mybadges" -> player.performCommand("badges owned");
+            case "allbadges" -> player.performCommand("badges all");
+            case "blockedbadges" -> player.performCommand("badges blocked");
+        }
+    }
 
+    private void runBrowseMenuAction(Player player, String menuType, String onClick, String cosmeticName) {
+        player.closeInventory();
+        Cache cache = plugin.getCache();
+        String type = cache.get(player.getUniqueId()).getMenuType();
+        int page = cache.get(player.getUniqueId()).getPage();
 
-            int slot = event.getRawSlot();
-            MenuItem clickedItem2 = itemManager.getAllButtons().stream()
-                    .filter(i -> i.getSlot() == slot)
-                    .findFirst()
-                    .orElse(null);
+        switch (onClick.toLowerCase()) {
+            case "tagsmenu" -> player.performCommand("tags");
+            case "badgesmenu" -> player.performCommand("badges");
+            case "backpage" -> openBrowsePage(player, menuType, type, page - 1);
+            case "nextpage" -> openBrowsePage(player, menuType, type, page + 1);
+            case "settag" -> player.performCommand("tags set " + cosmeticName);
+            case "setbadge" -> player.performCommand("badges set " + cosmeticName);
+        }
+    }
 
-            // Verifica se o item clicado é um cosmético
-            if (clickedItem1 != null){
-                // Verifica permissão
-                if (clickedItem1.getPermission() != null && !clickedItem1.getPermission().isEmpty()) {
+    private void openBrowseMenu(Player player, String command, String menuType) {
+        plugin.getCache().setMenuType(player.getUniqueId(), menuType);
+        player.performCommand(command);
+    }
 
-                    if (!(player.hasPermission(clickedItem1.getPermission()))) {
-                        player.sendMessage(
-                                MiniMessage.miniMessage().deserialize(
-                                        plugin.getConfig().getString("settings.listeners.no-permission")
-                                )
-                        );
-                        return;
-                    }
-                }
+    private void openBrowsePage(Player player, String cosmeticMenu, String type, int page) {
+        MenuConfig itemManager = getMenuConfig(cosmeticMenu);
+        YamlConfiguration menuConfig = getBrowseMenuConfig(cosmeticMenu);
+        BrowseMenu menu = new BrowseMenu(plugin, player, type, page, itemManager, menuConfig);
+        plugin.getCache().setPage(player.getUniqueId(), page);
+        menu.open();
+    }
 
-                onClick = clickedItem1.getOnClick();
-                browseMenuCommands(onClick, player, browseMenu.getMenuType(), displayName);
-
-            } else if (clickedItem2 != null){
-                // Verifica permissão
-                if (clickedItem2.getPermission() != null && !player.hasPermission(clickedItem2.getPermission())) {
-                    player.sendMessage(
-                            MiniMessage.miniMessage().deserialize(
-                                    plugin.getConfig().getString("settings.listeners.no-permission")
-                            )
-                    );
-                    return;
-                }
-
-                onClick = clickedItem2.getOnClick();
-                browseMenuCommands(onClick, player, browseMenu.getMenuType(), "");
-
-            } else return;
-
-        } else return;
-
-
+    private MenuConfig getMainMenuConfig(String type) {
+        return switch (type.toLowerCase()) {
+            case "color" -> plugin.getChatColorMenuConfig();
+            case "tag" -> plugin.getTagsMenuConfig();
+            case "badge" -> plugin.getBadgesMenuConfig();
+            case "cosmetics" -> plugin.getCosmeticsMenuConfig();
+            default -> null;
+        };
     }
 
     private MenuConfig getMenuConfig(String type) {
-        if (type.equalsIgnoreCase("color")) {
-            return plugin.getChatColorMenuConfig();
-        } else if (type.equalsIgnoreCase("tag")) {
-            return plugin.getTagsMenuConfig();
-        } else if (type.equalsIgnoreCase("badge")) {
-            return plugin.getBadgesMenuConfig();
-        } else if (type.equalsIgnoreCase("cosmetics")) {
-            return plugin.getCosmeticsMenuConfig();
-        }
-        return null;
-    }
-
-    private ItemManager getItemManager(String type) {
-        if (type.equalsIgnoreCase("tag")) {
-            return plugin.getTagManager();
-        } else if (type.equalsIgnoreCase("badge")) {
-            return plugin.getBadgesManager();
-        }
-        return null;
+        return switch (type.toLowerCase()) {
+            case "tag" -> plugin.getTagManager();
+            case "badge" -> plugin.getBadgesManager();
+            default -> null;
+        };
     }
 
     private YamlConfiguration getBrowseMenuConfig(String type) {
-        if (type.equalsIgnoreCase("tag")) {
-            return plugin.getBrowseTagsYml();
-        } else if (type.equalsIgnoreCase("badge")) {
-            return plugin.getBrowseBadgesYml();
-        }
-        return null;
+        return switch (type.toLowerCase()) {
+            case "tag" -> plugin.getBrowseTagsYml();
+            case "badge" -> plugin.getBrowseBadgesYml();
+            default -> null;
+        };
     }
-
-    private void mainMenuCommands(String onClick, MenuItem clickedItem, Player player) {
-        if (onClick.equalsIgnoreCase("changeColor")) {
-            player.performCommand("chatcolor set " + clickedItem.getColor());
-            player.closeInventory();
-        } else if (onClick.equalsIgnoreCase("changeGradient")) {
-            player.performCommand("chatcolor gradient");
-            player.closeInventory();
-        } else if (onClick.equalsIgnoreCase("cosmeticsMenu")) {
-            player.closeInventory();
-            player.performCommand("cosmetics");
-        } else if (onClick.equalsIgnoreCase("tagsMenu")) {
-            player.closeInventory();
-            player.performCommand("tags");
-        } else if (onClick.equalsIgnoreCase("badgesMenu")) {
-            player.closeInventory();
-            player.performCommand("badges");
-        } else if (onClick.equalsIgnoreCase("chatColorsMenu")) {
-            player.closeInventory();
-            player.performCommand("chatcolor");
-        } else if (onClick.equalsIgnoreCase("myTags")) {
-            Cache cache = plugin.getCache();
-            cache.setMenuType(player.getUniqueId(), "my");
-            player.closeInventory();
-            player.performCommand("tags owned");
-        } else if (onClick.equalsIgnoreCase("allTags")) {
-            Cache cache = plugin.getCache();
-            cache.setMenuType(player.getUniqueId(), "all");
-            player.closeInventory();
-            player.performCommand("tags all");
-        } else if (onClick.equalsIgnoreCase("blockedTags")) {
-            Cache cache = plugin.getCache();
-            cache.setMenuType(player.getUniqueId(), "blocked");
-            player.closeInventory();
-            player.performCommand("tags blocked");
-        } else if (onClick.equalsIgnoreCase("myBadges")) {
-            player.closeInventory();
-            player.performCommand("badges owned");
-        } else if (onClick.equalsIgnoreCase("allBadges")) {
-            player.closeInventory();
-            player.performCommand("badges all");
-        } else if (onClick.equalsIgnoreCase("blockedBadges")) {
-            player.closeInventory();
-            player.performCommand("badges blocked");
-        }
-
-    }
-
-    private void browseMenuCommands(String onClick, Player player, String cosmeticMenu, String cosmeticName) {
-        if (onClick.equalsIgnoreCase("tagsMenu")) {
-            player.closeInventory();
-            player.performCommand("tags");
-        } else if (onClick.equalsIgnoreCase("badgesMenu")) {
-            player.closeInventory();
-            player.performCommand("badges");
-        } else if (onClick.equalsIgnoreCase("backPage")) {
-            player.closeInventory();
-
-            Cache cache = plugin.getCache();
-            String type = cache.get(player.getUniqueId()).getMenuType();
-            int page = cache.get(player.getUniqueId()).getPage();
-            page = page - 1;
-            ItemManager itemManager = getItemManager(cosmeticMenu);
-            YamlConfiguration menuConfig = getBrowseMenuConfig(cosmeticMenu);
-            BrowseMenu menu = new BrowseMenu(plugin, player, type, page, itemManager, menuConfig);
-            cache.setPage(player.getUniqueId(), page);
-            menu.open();
-
-
-        } else if (onClick.equalsIgnoreCase("nextPage")) {
-            player.closeInventory();
-            Cache cache = plugin.getCache();
-            String type = cache.get(player.getUniqueId()).getMenuType();
-            int page = cache.get(player.getUniqueId()).getPage();
-            page = page + 1;
-            ItemManager itemManager = getItemManager(cosmeticMenu);
-            YamlConfiguration menuConfig = getBrowseMenuConfig(cosmeticMenu);
-            BrowseMenu menu = new BrowseMenu(plugin, player, type, page, itemManager, menuConfig);
-            cache.setPage(player.getUniqueId(), page);
-            menu.open();
-
-        } else if (onClick.equalsIgnoreCase("setTag")) {
-            player.closeInventory();
-            player.performCommand("tags set " + cosmeticName);
-        } else if (onClick.equalsIgnoreCase("setBadge")) {
-            player.closeInventory();
-            player.performCommand("badges set " + cosmeticName);
-        }
-
-
-    }
-
 }
