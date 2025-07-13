@@ -4,10 +4,7 @@ import me.sunrise.cosmeticsmanager.CosmeticsManager;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class DatabaseManager {
 
@@ -17,39 +14,39 @@ public class DatabaseManager {
     public void init() {
         FileConfiguration config = CosmeticsManager.getInstance().getConfig();
 
-        // Lê o prefixo
         tablePrefix = config.getString("settings.database.table-prefix", "cosmeticsmanager_");
-
         boolean mysqlEnabled = config.getBoolean("settings.database.mysql.enabled", false);
 
         try {
             if (mysqlEnabled) {
-                // Conexão MySQL
-                String hostname = config.getString("settings.database.mysql.hostname");
-                int port = config.getInt("settings.database.mysql.port");
-                String database = config.getString("settings.database.mysql.database");
-                String username = config.getString("settings.database.mysql.username");
-                String password = config.getString("settings.database.mysql.password");
-                String arguments = config.getString("settings.database.mysql.arguments", "");
-
-                String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database + arguments;
-
-                connection = DriverManager.getConnection(url, username, password);
-                CosmeticsManager.getInstance().getLogger().info("Conectado ao banco MySQL.");
+                initMySQL(config);
             } else {
-                // Conexão SQLite
-                File dbFile = new File(CosmeticsManager.getInstance().getDataFolder(), "data/database.db");
-                String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
-                connection = DriverManager.getConnection(url);
-                CosmeticsManager.getInstance().getLogger().info("Conectado ao banco SQLite.");
+                initSQLite();
             }
-
-            // Criar a tabela se não existir
             createTable();
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initMySQL(FileConfiguration config) throws SQLException {
+        String hostname = config.getString("settings.database.mysql.hostname");
+        int port = config.getInt("settings.database.mysql.port");
+        String database = config.getString("settings.database.mysql.database");
+        String username = config.getString("settings.database.mysql.username");
+        String password = config.getString("settings.database.mysql.password");
+        String arguments = config.getString("settings.database.mysql.arguments", "");
+
+        String url = "jdbc:mysql://" + hostname + ":" + port + "/" + database + arguments;
+        connection = DriverManager.getConnection(url, username, password);
+        CosmeticsManager.getInstance().getLogger().info("Conectado ao banco MySQL.");
+    }
+
+    private void initSQLite() throws SQLException {
+        File dbFile = new File(CosmeticsManager.getInstance().getDataFolder(), "data/database.db");
+        String url = "jdbc:sqlite:" + dbFile.getAbsolutePath();
+        connection = DriverManager.getConnection(url);
+        CosmeticsManager.getInstance().getLogger().info("Conectado ao banco SQLite.");
     }
 
     private void createTable() throws SQLException {
@@ -69,108 +66,75 @@ public class DatabaseManager {
         return connection;
     }
 
-    public void savePlayerChatColor(String uuid, String chatColor) {
-        boolean mysqlEnabled = CosmeticsManager.getInstance().getConfig().getBoolean("settings.database.mysql.enabled", false);
-        String sql;
-        if (mysqlEnabled) {
-            sql = "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, chat_color) VALUES (?, ?) " +
-                    "ON DUPLICATE KEY UPDATE chat_color = VALUES(chat_color);";
-        } else {
-            sql = "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, chat_color) VALUES (?, ?) " +
-                    "ON CONFLICT(uuid) DO UPDATE SET chat_color = excluded.chat_color;";
-        }
+    private boolean isMySQLEnabled() {
+        return CosmeticsManager.getInstance().getConfig().getBoolean("settings.database.mysql.enabled", false);
+    }
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, uuid);
-            stmt.setString(2, chatColor);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+    public void savePlayerChatColor(String uuid, String chatColor) {
+        String sql = isMySQLEnabled()
+                ? "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, chat_color) VALUES (?, ?) " +
+                "ON DUPLICATE KEY UPDATE chat_color = VALUES(chat_color);"
+                : "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, chat_color) VALUES (?, ?) " +
+                "ON CONFLICT(uuid) DO UPDATE SET chat_color = excluded.chat_color;";
+
+        executeUpdate(uuid, chatColor, sql);
     }
 
     public String getPlayerChatColor(String uuid) {
-        String sql = "SELECT chat_color FROM " + tablePrefix + "player_cosmetics WHERE uuid = ?;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, uuid);
-            var rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("chat_color");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return querySingleString(uuid, "chat_color");
     }
 
     public void savePlayerTag(String uuid, String tag) {
-        boolean mysqlEnabled = CosmeticsManager.getInstance().getConfig().getBoolean("settings.database.mysql.enabled", false);
-        String sql;
-        if (mysqlEnabled) {
-            sql = "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, tag) VALUES (?, ?) " +
-                    "ON DUPLICATE KEY UPDATE tag = VALUES(tag);";
-        } else {
-            sql = "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, tag) VALUES (?, ?) " +
-                    "ON CONFLICT(uuid) DO UPDATE SET tag = excluded.tag;";
-        }
+        String sql = isMySQLEnabled()
+                ? "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, tag) VALUES (?, ?) " +
+                "ON DUPLICATE KEY UPDATE tag = VALUES(tag);"
+                : "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, tag) VALUES (?, ?) " +
+                "ON CONFLICT(uuid) DO UPDATE SET tag = excluded.tag;";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, uuid);
-            stmt.setString(2, tag);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        executeUpdate(uuid, tag, sql);
     }
 
     public String getPlayerTag(String uuid) {
-        String sql = "SELECT tag FROM " + tablePrefix + "player_cosmetics WHERE uuid = ?;";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, uuid);
-            var rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getString("tag");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return querySingleString(uuid, "tag");
     }
 
     public void savePlayerBadge(String uuid, String badge) {
-        boolean mysqlEnabled = CosmeticsManager.getInstance().getConfig().getBoolean("settings.database.mysql.enabled", false);
-        String sql;
-        if (mysqlEnabled) {
-            sql = "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, badge) VALUES (?, ?) " +
-                    "ON DUPLICATE KEY UPDATE badge = VALUES(badge);";
-        } else {
-            sql = "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, badge) VALUES (?, ?) " +
-                    "ON CONFLICT(uuid) DO UPDATE SET badge = excluded.badge;";
-        }
+        String sql = isMySQLEnabled()
+                ? "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, badge) VALUES (?, ?) " +
+                "ON DUPLICATE KEY UPDATE badge = VALUES(badge);"
+                : "INSERT INTO " + tablePrefix + "player_cosmetics (uuid, badge) VALUES (?, ?) " +
+                "ON CONFLICT(uuid) DO UPDATE SET badge = excluded.badge;";
 
+        executeUpdate(uuid, badge, sql);
+    }
+
+    public String getPlayerBadge(String uuid) {
+        return querySingleString(uuid, "badge");
+    }
+
+    private void executeUpdate(String uuid, String value, String sql) {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, uuid);
-            stmt.setString(2, badge);
+            stmt.setString(2, value);
             stmt.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public String getPlayerBadge(String uuid) {
-        String sql = "SELECT badge FROM " + tablePrefix + "player_cosmetics WHERE uuid = ?;";
+    private String querySingleString(String uuid, String column) {
+        String sql = "SELECT " + column + " FROM " + tablePrefix + "player_cosmetics WHERE uuid = ?;";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, uuid);
             var rs = stmt.executeQuery();
             if (rs.next()) {
-                return rs.getString("badge");
+                return rs.getString(column);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
     }
-
 
     public void close() {
         try {

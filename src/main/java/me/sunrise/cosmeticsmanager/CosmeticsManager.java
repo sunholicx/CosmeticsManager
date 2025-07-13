@@ -1,19 +1,18 @@
 package me.sunrise.cosmeticsmanager;
 
 import co.aikar.commands.PaperCommandManager;
-import me.sunrise.cosmeticsmanager.chatcolor.GradientInputManager;
 import me.sunrise.cosmeticsmanager.commands.BadgesCommand;
 import me.sunrise.cosmeticsmanager.commands.ChatColorCommand;
 import me.sunrise.cosmeticsmanager.commands.CosmeticsCommand;
 import me.sunrise.cosmeticsmanager.commands.TagsCommand;
-import me.sunrise.cosmeticsmanager.chatcolor.ChatColorConfig;
-import me.sunrise.cosmeticsmanager.listeners.MenuClickListener;
 import me.sunrise.cosmeticsmanager.listeners.GradientChatListener;
+import me.sunrise.cosmeticsmanager.listeners.MenuClickListener;
 import me.sunrise.cosmeticsmanager.listeners.PlayerJoinListener;
-import me.sunrise.cosmeticsmanager.menus.browse.ItemManager;
-import me.sunrise.cosmeticsmanager.menus.main.MenuConfig;
+import me.sunrise.cosmeticsmanager.menus.MenuConfig;
 import me.sunrise.cosmeticsmanager.storage.Cache;
 import me.sunrise.cosmeticsmanager.storage.DatabaseManager;
+import me.sunrise.cosmeticsmanager.utils.ChatColorConfig;
+import me.sunrise.cosmeticsmanager.utils.GradientInputManager;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,18 +25,22 @@ import java.util.List;
 public final class CosmeticsManager extends JavaPlugin {
 
     private static CosmeticsManager instance;
-    FileConfiguration config;
+
+    private FileConfiguration config;
 
     private DatabaseManager databaseManager;
-    private MenuConfig chatColorMenuConfig;
-    private MenuConfig tagMenuConfig;
-    private MenuConfig cosmeticsMenuConfig;
-    private MenuConfig badgesMenuConfig;
-    private ChatColorConfig  chatColorsConfig;
     private Cache cache;
     private GradientInputManager gradientInputManager;
-    private ItemManager tagManager;
-    private ItemManager badgesManager;
+
+    private ChatColorConfig chatColorsConfig;
+
+    private MenuConfig cosmeticsMenuConfig;
+    private MenuConfig chatColorMenuConfig;
+    private MenuConfig tagMenuConfig;
+    private MenuConfig badgesMenuConfig;
+    private MenuConfig tagManager;
+    private MenuConfig badgesManager;
+
     private YamlConfiguration badgesYml;
     private YamlConfiguration chatColorsYml;
     private YamlConfiguration tagsYml;
@@ -48,7 +51,6 @@ public final class CosmeticsManager extends JavaPlugin {
     private YamlConfiguration browseTagsYml;
     private YamlConfiguration browseBadgesYml;
 
-
     @Override
     public void onEnable() {
         instance = this;
@@ -58,7 +60,7 @@ public final class CosmeticsManager extends JavaPlugin {
         loadConfigs();
         loadDB();
 
-        // Cria um cache dos dados dos players online
+        // Inicializa cache e gradient
         this.cache = new Cache();
         this.gradientInputManager = new GradientInputManager();
         reloadCache();
@@ -69,12 +71,10 @@ public final class CosmeticsManager extends JavaPlugin {
         new CosmeticsPlaceholders(this).register();
 
         getLogger().info("Cosmetics Manager inicializado!");
-
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
         if (databaseManager != null) {
             databaseManager.close();
         }
@@ -86,8 +86,7 @@ public final class CosmeticsManager extends JavaPlugin {
         manager.enableUnstableAPI("brigadier");
         manager.enableUnstableAPI("help");
 
-
-        // Aliases
+        // Aliases e descrições
         manager.getCommandReplacements().addReplacements(
                 "cosmetics", getAliases("settings.commands.cosmetics"),
                 "badges", getAliases("settings.commands.badges"),
@@ -128,25 +127,23 @@ public final class CosmeticsManager extends JavaPlugin {
                 "admin", config.getString("settings.admin-permission")
         );
 
-        // Comandos
+        // Registra comandos
         manager.registerCommand(new CosmeticsCommand(this));
         manager.registerCommand(new BadgesCommand(this));
         manager.registerCommand(new ChatColorCommand(this));
         manager.registerCommand(new TagsCommand(this));
 
-        // Exception Handler Global
+        // Exception Handler global
         manager.setDefaultExceptionHandler((command, registeredCommand, sender, args, t) -> {
             getLogger().warning("Error occurred while executing command " + command.getName());
-            return false; // Se retornar false, ACF mostra mensagem padrão ao player
+            return false;
         });
-
     }
 
     public void registerListeners() {
         getServer().getPluginManager().registerEvents(new MenuClickListener(this), this);
         getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
         getServer().getPluginManager().registerEvents(new GradientChatListener(this), this);
-
     }
 
     public void saveConfigs() {
@@ -166,8 +163,6 @@ public final class CosmeticsManager extends JavaPlugin {
 
         for (String resource : resources) {
             File outFile = new File(getDataFolder(), resource);
-
-            // Se não existir, cria as pastas e salva
             if (!outFile.exists()) {
                 outFile.getParentFile().mkdirs();
                 saveResource(resource, false);
@@ -177,7 +172,7 @@ public final class CosmeticsManager extends JavaPlugin {
     }
 
     public void loadDB() {
-        File dataFolder = new File(this.getDataFolder(), "data");
+        File dataFolder = new File(getDataFolder(), "data");
         if (!dataFolder.exists()) {
             dataFolder.mkdirs();
         }
@@ -186,11 +181,9 @@ public final class CosmeticsManager extends JavaPlugin {
     }
 
     public void loadConfigs() {
-        // Recarrega o config.yml padrão
         reloadConfig();
-        this.config = this.getConfig();
+        this.config = getConfig();
 
-        // Recarrega os YML customizados
         badgesYml = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "cosmetics/badges.yml"));
         chatColorsYml = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "cosmetics/chat-colors.yml"));
         tagsYml = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "cosmetics/tags.yml"));
@@ -202,28 +195,16 @@ public final class CosmeticsManager extends JavaPlugin {
         browseBadgesYml = YamlConfiguration.loadConfiguration(new File(getDataFolder(), "guis/browse-badges.yml"));
 
         cosmeticsConfig();
-
     }
 
     public void cosmeticsConfig() {
-        // Cosmetics
         this.cosmeticsMenuConfig = new MenuConfig(getCosmeticsMenuYml());
-
-        // Chat Color
         this.chatColorMenuConfig = new MenuConfig(getChatColorsMenuYml());
         this.chatColorsConfig = new ChatColorConfig(this);
-
-
-        // Tags
         this.tagMenuConfig = new MenuConfig(getTagsMenuYml());
-
-        // Badges
         this.badgesMenuConfig = new MenuConfig(getBadgesMenuYml());
-
-        // Browse Menus
-        this.tagManager = new ItemManager(getTagsYml(), getBrowseTagsYml());
-        this.badgesManager = new ItemManager(getBadgesYml(), getBrowseBadgesYml());
-
+        this.tagManager = new MenuConfig(getTagsYml(), getBrowseTagsYml());
+        this.badgesManager = new MenuConfig(getBadgesYml(), getBrowseBadgesYml());
     }
 
     public static CosmeticsManager getInstance() {
@@ -238,104 +219,80 @@ public final class CosmeticsManager extends JavaPlugin {
         return chatColorMenuConfig;
     }
 
-    public MenuConfig getTagsMenuConfig() { return tagMenuConfig; }
+    public MenuConfig getTagsMenuConfig() {
+        return tagMenuConfig;
+    }
 
-    public MenuConfig getCosmeticsMenuConfig() { return cosmeticsMenuConfig; }
+    public MenuConfig getCosmeticsMenuConfig() {
+        return cosmeticsMenuConfig;
+    }
 
-    public MenuConfig getBadgesMenuConfig() { return badgesMenuConfig; }
+    public MenuConfig getBadgesMenuConfig() {
+        return badgesMenuConfig;
+    }
 
-    public String getAliases(String path) {
-        // Extrai o último segmento do path como o nome da key
-        String[] split = path.split("\\.");
-        String keyName = split[split.length - 1];
+    public MenuConfig getTagManager() {
+        return tagManager;
+    }
 
-        // Carrega a lista de aliases
-        List<String> aliasesNames = config.getStringList(path + ".aliases");
-
-        // Constrói a string
-        StringBuilder aliases = new StringBuilder();
-        aliases.append(keyName);
-
-        for (String alias : aliasesNames) {
-            aliases.append("|").append(alias);
-        }
-
-        return aliases.toString();
+    public MenuConfig getBadgesManager() {
+        return badgesManager;
     }
 
     public ChatColorConfig getChatColorConfig() {
         return chatColorsConfig;
     }
 
-    public Cache getCache() { return cache; }
-
-    public GradientInputManager getGradientInputManager() { return gradientInputManager; }
-
-    public ItemManager getTagManager() { return tagManager; }
-
-    public ItemManager getBadgesManager() { return badgesManager; }
-
-    public YamlConfiguration getBadgesYml() {
-        return badgesYml;
+    public Cache getCache() {
+        return cache;
     }
 
-    public YamlConfiguration getChatColorsYml() {
-        return chatColorsYml;
+    public GradientInputManager getGradientInputManager() {
+        return gradientInputManager;
     }
 
-    public YamlConfiguration getTagsYml() {
-        return tagsYml;
+    public String getAliases(String path) {
+        String[] split = path.split("\\.");
+        String keyName = split[split.length - 1];
+        List<String> aliasesNames = config.getStringList(path + ".aliases");
+
+        StringBuilder aliases = new StringBuilder(keyName);
+        for (String alias : aliasesNames) {
+            aliases.append("|").append(alias);
+        }
+        return aliases.toString();
     }
 
-    public YamlConfiguration getCosmeticsMenuYml() {
-        return cosmeticsMenuYml;
-    }
-
-    public YamlConfiguration getBadgesMenuYml() {
-        return badgesMenuYml;
-    }
-
-    public YamlConfiguration getChatColorsMenuYml() {
-        return chatColorsMenuYml;
-    }
-
-    public YamlConfiguration getTagsMenuYml() {
-        return tagsMenuYml;
-    }
-
-    public YamlConfiguration getBrowseTagsYml() {
-        return browseTagsYml;
-    }
-
-    public YamlConfiguration getBrowseBadgesYml() {
-        return browseBadgesYml;
-    }
+    public YamlConfiguration getBadgesYml() { return badgesYml; }
+    public YamlConfiguration getChatColorsYml() { return chatColorsYml; }
+    public YamlConfiguration getTagsYml() { return tagsYml; }
+    public YamlConfiguration getCosmeticsMenuYml() { return cosmeticsMenuYml; }
+    public YamlConfiguration getBadgesMenuYml() { return badgesMenuYml; }
+    public YamlConfiguration getChatColorsMenuYml() { return chatColorsMenuYml; }
+    public YamlConfiguration getTagsMenuYml() { return tagsMenuYml; }
+    public YamlConfiguration getBrowseTagsYml() { return browseTagsYml; }
+    public YamlConfiguration getBrowseBadgesYml() { return browseBadgesYml; }
 
     public void reloadCache() {
-        // Limpa o cache
         cache.clear();
 
-        // Para cada player online, recarrega os dados
         for (Player player : Bukkit.getOnlinePlayers()) {
-            String savedColor = this.getDatabaseManager().getPlayerChatColor(player.getUniqueId().toString());
+            String savedColor = databaseManager.getPlayerChatColor(player.getUniqueId().toString());
             if (savedColor != null) {
-                this.getCache().setChatColor(player.getUniqueId(), savedColor);
+                cache.setChatColor(player.getUniqueId(), savedColor);
             }
 
-            String savedTag = this.getDatabaseManager().getPlayerTag(player.getUniqueId().toString());
+            String savedTag = databaseManager.getPlayerTag(player.getUniqueId().toString());
             if (savedTag != null) {
-                this.getCache().setTag(player.getUniqueId(), savedTag);
+                cache.setTag(player.getUniqueId(), savedTag);
             }
 
-            String savedBadge = this.getDatabaseManager().getPlayerBadge(player.getUniqueId().toString());
+            String savedBadge = databaseManager.getPlayerBadge(player.getUniqueId().toString());
             if (savedBadge != null) {
-                this.getCache().setBadge(player.getUniqueId(), savedBadge);
+                cache.setBadge(player.getUniqueId(), savedBadge);
             }
-
         }
 
-        // Log no console
-        getLogger().info("[CosmeticsManager] Cache recarregado para "
-                + Bukkit.getOnlinePlayers().size() + " players online.");
+        getLogger().info("[CosmeticsManager] Cache recarregado para " + Bukkit.getOnlinePlayers().size() + " players online.");
     }
 }

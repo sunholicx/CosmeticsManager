@@ -3,10 +3,10 @@ package me.sunrise.cosmeticsmanager.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
-import me.sunrise.cosmeticsmanager.menus.browse.BrowseMenu;
-import me.sunrise.cosmeticsmanager.menus.browse.CosmeticData;
-import me.sunrise.cosmeticsmanager.menus.browse.ItemManager;
-import me.sunrise.cosmeticsmanager.menus.main.Menu;
+import me.sunrise.cosmeticsmanager.menus.BrowseMenu;
+import me.sunrise.cosmeticsmanager.menus.Menu;
+import me.sunrise.cosmeticsmanager.menus.MenuConfig;
+import me.sunrise.cosmeticsmanager.menus.MenuItem;
 import me.sunrise.cosmeticsmanager.storage.Cache;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -18,6 +18,8 @@ import org.bukkit.entity.Player;
 public class BadgesCommand extends BaseCommand {
 
     private final CosmeticsManager plugin;
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
+    private final PlainTextComponentSerializer plainSerializer = PlainTextComponentSerializer.plainText();
 
     public BadgesCommand(CosmeticsManager plugin) {
         this.plugin = plugin;
@@ -25,95 +27,90 @@ public class BadgesCommand extends BaseCommand {
 
     @Default
     public void onCommand(Player player) {
-        Menu menu = new Menu(plugin, player, plugin.getBadgesMenuConfig());
-        menu.open();
+        new Menu(plugin, player, plugin.getBadgesMenuConfig()).open();
     }
 
     @Subcommand("%ownedbadges")
     @CommandCompletion("@nothing")
     @Description("%ownedbdgsdescription")
     public void onOwned(Player player) {
-        BrowseMenu menu = new BrowseMenu(plugin, player, "my", 1, plugin.getBadgesManager(), plugin.getBrowseBadgesYml());
-        menu.open();
-        Cache cache = plugin.getCache();
-        cache.setMenuType(player.getUniqueId(), "my");
-        cache.setPage(player.getUniqueId(),1);
+        openBrowseMenu(player, "my");
     }
 
     @Subcommand("%allbadges")
     @CommandCompletion("@nothing")
     @Description("%allbdgsdescription")
     public void onAll(Player player) {
-        BrowseMenu menu = new BrowseMenu(plugin, player, "all", 1, plugin.getBadgesManager(), plugin.getBrowseBadgesYml());
-        menu.open();
-        Cache cache = plugin.getCache();
-        cache.setMenuType(player.getUniqueId(), "all");
-        cache.setPage(player.getUniqueId(),1);
+        openBrowseMenu(player, "all");
     }
 
     @Subcommand("%blkbadges")
     @CommandCompletion("@nothing")
     @Description("%blkbdgsdescription")
-    public void onblocked(Player player) {
-        Cache cache = plugin.getCache();
-        BrowseMenu menu = new BrowseMenu(plugin, player, "blocked", 1, plugin.getBadgesManager(), plugin.getBrowseBadgesYml());
+    public void onBlocked(Player player) {
+        openBrowseMenu(player, "blocked");
+    }
+
+    private void openBrowseMenu(Player player, String type) {
+        BrowseMenu menu = new BrowseMenu(
+                plugin,
+                player,
+                type,
+                1,
+                plugin.getBadgesManager(),
+                plugin.getBrowseBadgesYml()
+        );
         menu.open();
-        cache.setMenuType(player.getUniqueId(), "blocked");
-        cache.setPage(player.getUniqueId(),1);
+
+        Cache cache = plugin.getCache();
+        cache.setMenuType(player.getUniqueId(), type);
+        cache.setPage(player.getUniqueId(), 1);
     }
 
     @Subcommand("%setbadge")
-    @Syntax("<[badge]>")
+    @Syntax("<badge>")
     @CommandCompletion("@nothing")
     @Description("%setbadgedescription")
-    public void onSet(Player player, String arg) {
-        ItemManager manager = plugin.getBadgesManager();
+    public void onSet(Player player, String inputBadge) {
+        MenuConfig manager = plugin.getBadgesManager();
+        String configPath = "settings.commands.badges.subcommand.set.";
 
-        String path = "settings.commands.badges.subcommand.set.";
+        // Normaliza o input
+        String sanitizedInput = ChatColor.stripColor(inputBadge).trim().toLowerCase();
 
-        // Verifica se a badge informada existe
-        String displayName0 = arg.toLowerCase();
-        String displayName = ChatColor.stripColor(displayName0).trim();
-        CosmeticData badge = manager.getAllCosmetics().stream()
+        // Tenta localizar o badge
+        MenuItem badge = manager.getAllCosmetics().stream()
                 .filter(i -> {
-                    String name = PlainTextComponentSerializer.plainText().serialize(
-                            MiniMessage.miniMessage().deserialize(i.getName())
+                    String deserializedName = plainSerializer.serialize(
+                            miniMessage.deserialize(i.getName())
                     ).trim();
-                    return name.equalsIgnoreCase(displayName);
+                    return deserializedName.equalsIgnoreCase(sanitizedInput);
                 })
                 .findFirst()
                 .orElse(null);
 
         if (badge == null) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString(path + "invalid-badge")
-                    )
-            );
+            sendConfigMessage(player, configPath + "invalid-badge");
             return;
         }
 
-        // Verifica permissão
+        // Checa permissão se existir
         if (badge.getPermission() != null && !badge.getPermission().isEmpty()) {
-
-            if (!(player.hasPermission(badge.getPermission()))) {
-                player.sendMessage(
-                        MiniMessage.miniMessage().deserialize(
-                                plugin.getConfig().getString(path + "no-permission")
-                        )
-                );
+            if (!player.hasPermission(badge.getPermission())) {
+                sendConfigMessage(player, configPath + "no-permission");
                 return;
             }
         }
 
-        // Salva mudanças
+        // Salva badge
         plugin.getDatabaseManager().savePlayerBadge(player.getUniqueId().toString(), badge.getEmoji());
         plugin.getCache().setBadge(player.getUniqueId(), badge.getEmoji());
-        player.sendMessage(
-                MiniMessage.miniMessage().deserialize(
-                        plugin.getConfig().getString(path + "success").replace("[Badge]", badge.getEmoji())
-                )
-        );
+
+        String successMessage = plugin.getConfig()
+                .getString(configPath + "success")
+                .replace("[Badge]", badge.getEmoji());
+
+        player.sendMessage(miniMessage.deserialize(successMessage));
     }
 
     @Subcommand("%removebadge")
@@ -124,4 +121,13 @@ public class BadgesCommand extends BaseCommand {
         plugin.getCache().setBadge(player.getUniqueId(), "");
     }
 
+    /**
+     * Envia uma mensagem configurada para o jogador.
+     */
+    private void sendConfigMessage(Player player, String path) {
+        String msg = plugin.getConfig().getString(path);
+        if (msg != null && !msg.isEmpty()) {
+            player.sendMessage(miniMessage.deserialize(msg));
+        }
+    }
 }

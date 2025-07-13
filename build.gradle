@@ -41,7 +41,6 @@ dependencies {
     implementation "net.kyori:adventure-text-minimessage:4.22.0"
     compileOnly "dev.lone:api-itemsadder:4.0.10"
     compileOnly 'me.clip:placeholderapi:2.11.6'
-    compileOnly "co.aikar:acf-paper:0.5.1-SNAPSHOT"
     implementation "co.aikar:acf-paper:0.5.1-SNAPSHOT"
 }
 

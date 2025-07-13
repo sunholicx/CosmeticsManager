@@ -1,150 +1,137 @@
 package me.sunrise.cosmeticsmanager.listeners;
 
+import io.papermc.paper.event.player.AsyncChatEvent;
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
-import me.sunrise.cosmeticsmanager.chatcolor.ChatColorConfig;
+import me.sunrise.cosmeticsmanager.utils.ChatColorConfig;
 import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 public class GradientChatListener implements Listener {
 
     private final CosmeticsManager plugin;
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     public GradientChatListener(CosmeticsManager plugin) {
         this.plugin = plugin;
     }
 
-    @EventHandler
-    public void onChat(AsyncPlayerChatEvent event) {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onChat(AsyncChatEvent event) {
         var player = event.getPlayer();
         var manager = plugin.getGradientInputManager();
+        var chatConfig = plugin.getChatColorConfig();
 
         if (!manager.isAwaiting(player)) {
             return;
         }
 
-        event.setCancelled(true); // não mostrar a mensagem no chat público
+        event.setCancelled(true);
+        event.viewers().clear();
 
-        // Pega e formata mensagem do player
-        String message = event.getMessage().trim();
-        player.sendMessage(message);
-        message = message.toLowerCase();
+        String message = PlainTextComponentSerializer.plainText().serialize(event.message()).trim();
 
-        // Checa se foi cancelado
-        if (message.equalsIgnoreCase(plugin.getConfig().getString("settings.listeners.gradient-setting.cancelArg").toLowerCase())) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString("settings.listeners.gradient-setting.cancel")
-                    )
-            );
+        // Cancelar
+        String cancelArg = plugin.getConfig().getString("settings.listeners.gradient-setting.cancelArg");
+        if (cancelArg != null && message.equalsIgnoreCase(cancelArg)) {
+            send(player, "settings.listeners.gradient-setting.cancel");
             manager.remove(player);
             return;
         }
 
         String[] parts = message.split("\\s+");
-
-        // Checa se a quantidade de argumentos está dentro dos limites
-        if (parts.length > 4) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString("settings.listeners.gradient-setting.invalid-length")
-                    )
-            );
+        if (parts.length == 0 || parts.length > 4) {
+            send(player, "settings.listeners.gradient-setting.invalid-length");
             return;
         }
 
-        // Verifica se apenas uma cor foi escolhida
+        // Caso apenas 1 cor, delegar ao comando normal
         if (parts.length == 1) {
-            player.performCommand("chatcolor set " + message);
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                player.performCommand("chatcolor set " + parts[0]);
+            });
             return;
         }
 
-        // Verifica os argumentos e monta o valor final
-        ChatColorConfig config = plugin.getChatColorConfig();
-        String path = "settings.commands.chatcolor.subcommand.set.";
+        // Modo gradiente
         StringBuilder gradient = new StringBuilder("<gradient:");
+        String path = "settings.commands.chatcolor.subcommand.set.";
+
         for (int i = 0; i < parts.length; i++) {
+            String color = parts[i];
 
+            if (i > 0) gradient.append(":");
 
-            // Verifica cores HEX e se tem permissão
-            if (parts[i].startsWith("#")) {
-                String hex = parts[i].toLowerCase();
-
-                if (!hex.matches("^#([A-Fa-f0-9]{6})$")) {
-                    player.sendMessage(
-                            MiniMessage.miniMessage().deserialize(
-                                    plugin.getConfig().getString(path + "invalid-hex")
-                            )
-                    );
+            if (color.startsWith("#")) {
+                if (!isValidHex(color)) {
+                    send(player, path + "invalid-hex");
                     manager.remove(player);
                     return;
                 }
-
-                // Verifica permissão
-                String hexPermission = config.getPermission("hex");
-                if (hexPermission != null && !player.hasPermission(hexPermission)) {
-                    player.sendMessage(
-                            MiniMessage.miniMessage().deserialize(
-                                    plugin.getConfig().getString(path + "no-hex-permission")
-                            )
-                    );
+                if (!hasPermission(player, chatConfig.getPermission("hex"), path + "no-hex-permission")) {
                     manager.remove(player);
                     return;
                 }
-
-                // Adiciona cor ao gradiente
-                if (i > 0) gradient.append(":");
-                gradient.append(parts[i]);
-
+                gradient.append(color.toLowerCase());
             } else {
-                // Verifica se a cor existe e se tem permissão
-                if (!config.isValidColor(parts[i])) {
-                    player.sendMessage(
-                            MiniMessage.miniMessage().deserialize(
-                                    plugin.getConfig().getString(path + "invalid-color")
-                            )
-                    );
+                if (!chatConfig.isValidColor(color)) {
+                    send(player, path + "invalid-color");
                     manager.remove(player);
                     return;
                 }
-
-                String permission = config.getPermission(parts[i]);
-                if (permission != null && !player.hasPermission(permission)) {
-                    player.sendMessage(
-                            MiniMessage.miniMessage().deserialize(
-                                    plugin.getConfig().getString(path + "no-basics-permission")
-                            )
-                    );
+                if (!hasPermission(player, chatConfig.getPermission(color), path + "no-basics-permission")) {
                     manager.remove(player);
                     return;
                 }
-
-                // Adiciona cor ao gradiente
-                if (i > 0) gradient.append(":");
-                gradient.append(config.getColorValue(config.getKey(parts[i])));
+                gradient.append(chatConfig.getColorValue(chatConfig.getKey(color)));
             }
-
-
         }
-
         gradient.append(">");
 
-        // Salva no banco
+        // Salva no banco e atualiza cache
         plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), gradient.toString());
-
-        // Atualiza cache
         plugin.getCache().setChatColor(player.getUniqueId(), gradient.toString());
 
         player.sendMessage(
-                MiniMessage.miniMessage().deserialize(
+                miniMessage.deserialize(
                         plugin.getConfig().getString("settings.listeners.gradient-setting.success")
                                 .replace("[openGrad]", gradient)
                                 .replace("[closeGrad]", "</gradient>")
                 )
         );
 
-        // Sai do modo input
         manager.remove(player);
+    }
+
+    /**
+     * Verifica se uma string é um HEX válido.
+     */
+    private boolean isValidHex(String hex) {
+        return hex.matches("^#([A-Fa-f0-9]{6})$");
+    }
+
+    /**
+     * Envia mensagem de configuração.
+     */
+    private void send(org.bukkit.entity.Player player, String path) {
+        String msg = plugin.getConfig().getString(path);
+        if (msg != null && !msg.isEmpty()) {
+            player.sendMessage(miniMessage.deserialize(msg));
+        }
+    }
+
+    /**
+     * Checa permissão e envia mensagem caso não tenha.
+     */
+    private boolean hasPermission(org.bukkit.entity.Player player, String permission, String denyMessagePath) {
+        if (permission == null || permission.isEmpty()) return true;
+        if (!player.hasPermission(permission)) {
+            send(player, denyMessagePath);
+            return false;
+        }
+        return true;
     }
 }

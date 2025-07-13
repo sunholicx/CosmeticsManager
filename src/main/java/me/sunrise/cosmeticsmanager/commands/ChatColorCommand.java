@@ -3,19 +3,18 @@ package me.sunrise.cosmeticsmanager.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import me.sunrise.cosmeticsmanager.CosmeticsManager;
-import me.sunrise.cosmeticsmanager.chatcolor.ChatColorConfig;
-import me.sunrise.cosmeticsmanager.menus.main.Menu;
+import me.sunrise.cosmeticsmanager.utils.ChatColorConfig;
+import me.sunrise.cosmeticsmanager.menus.Menu;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-
-import java.io.File;
 
 @CommandAlias("%chatcolor")
 @Description("%ccdescription")
 public class ChatColorCommand extends BaseCommand {
 
     private final CosmeticsManager plugin;
+    private final MiniMessage miniMessage = MiniMessage.miniMessage();
 
     public ChatColorCommand(CosmeticsManager plugin) {
         this.plugin = plugin;
@@ -23,9 +22,7 @@ public class ChatColorCommand extends BaseCommand {
 
     @Default
     public void onCommand(Player player) {
-        Menu menu = new Menu(plugin, player, plugin.getChatColorMenuConfig());
-        menu.open();
-
+        new Menu(plugin, player, plugin.getChatColorMenuConfig()).open();
     }
 
     @Subcommand("%setcolor")
@@ -34,152 +31,130 @@ public class ChatColorCommand extends BaseCommand {
     @Description("%setcolordescription")
     public void onSet(Player player, String arg) {
         ChatColorConfig config = plugin.getChatColorConfig();
-
         String path = "settings.commands.chatcolor.subcommand.set.";
 
         if (arg.startsWith("#")) {
-            // Cor HEX
+            // HEX color
             String hex = arg.toLowerCase();
 
-            if (!hex.matches("^#([A-Fa-f0-9]{6})$")) {
-                player.sendMessage(
-                        MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString(path + "invalid-hex")
-                        )
-                );
+            if (!hex.matches("^#([a-f0-9]{6})$")) {
+                sendConfigMessage(player, path + "invalid-hex");
                 return;
             }
 
-            // Verifica permissão
-            boolean isHexBasicColor = config.isValidColor(hex);
-
-            if (!isHexBasicColor) {
-                String hexPermission = config.getPermission("hex");
-                if (hexPermission != null && !player.hasPermission(hexPermission)) {
-                    player.sendMessage(
-                            MiniMessage.miniMessage().deserialize(
-                                    plugin.getConfig().getString(path + "no-hex-permission")
-                            )
-                    );
+            boolean isBasicHex = config.isValidColor(hex);
+            if (!isBasicHex) {
+                String hexPerm = config.getPermission("hex");
+                if (hexPerm != null && !player.hasPermission(hexPerm)) {
+                    sendConfigMessage(player, path + "no-hex-permission");
                     return;
                 }
             }
 
-
             String finalValue = "<" + hex + ">";
-            plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), finalValue);
-            plugin.getCache().setChatColor(player.getUniqueId(), finalValue);
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString(path + "success").replace("[Cor]", finalValue+hex)
-                    )
-            );
+            savePlayerChatColor(player, finalValue);
+            sendSuccessMessage(player, path + "success", finalValue + hex);
             return;
         }
 
-        // Cor é válida?
+        // Named color
         if (!config.isValidColor(arg)) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString(path + "invalid-color")
-                    )
-            );
+            sendConfigMessage(player, path + "invalid-color");
             return;
         }
-        // player tem permissão?
+
         String permission = config.getPermission(arg);
         if (permission != null && !player.hasPermission(permission)) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString(path + "no-basics-permission")
-                    )
-            );
+            sendConfigMessage(player, path + "no-basics-permission");
             return;
         }
 
-        String value = config.getDisplayName(config.getKey(arg));
+        String key = config.getKey(arg);
+        String value = config.getDisplayName(key);
         if (value == null || value.isEmpty()) {
+            sendConfigMessage(player, path + "invalid-color");
             return;
         }
 
-        String finalValue = "<" + config.getColorValue(config.getKey(arg)) + ">";
-        plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), finalValue);
-        plugin.getCache().setChatColor(player.getUniqueId(), finalValue);
-        player.sendMessage(
-                MiniMessage.miniMessage().deserialize(
-                        plugin.getConfig().getString(path + "success").replace("[Cor]", finalValue+value)
-                )
-        );
+        String finalValue = "<" + config.getColorValue(key) + ">";
+        savePlayerChatColor(player, finalValue);
+        sendSuccessMessage(player, path + "success", finalValue + value);
     }
-
 
     @Subcommand("%gradient")
     @CommandCompletion("@nothing")
     @Description("%graddescription")
     public void onGradient(Player player) {
-        String permission = plugin.getChatColorConfig().getPermission("gradient");
-        if (permission != null && !player.hasPermission(permission)) {
-            player.sendMessage(
-                    MiniMessage.miniMessage().deserialize(
-                            plugin.getConfig().getString("settings.commands.chatcolor.subcommand.gradient.no-gradient-permission")
-                    )
-            );
+        String perm = plugin.getChatColorConfig().getPermission("gradient");
+        String basePath = "settings.commands.chatcolor.subcommand.gradient.";
+
+        if (perm != null && !player.hasPermission(perm)) {
+            sendConfigMessage(player, basePath + "no-gradient-permission");
             return;
         }
-        player.sendMessage(
-                MiniMessage.miniMessage().deserialize(
-                        plugin.getConfig().getString("settings.commands.chatcolor.subcommand.gradient.msg1")
-                )
-        );
-        player.sendMessage(
-                MiniMessage.miniMessage().deserialize(
-                        plugin.getConfig().getString("settings.commands.chatcolor.subcommand.gradient.msg2")
-                )
-        );
-        // Marca o jogador como aguardando input
+
+        sendConfigMessage(player, basePath + "msg1");
+        sendConfigMessage(player, basePath + "msg2");
+
+        // Marca como aguardando input
         plugin.getGradientInputManager().add(player);
     }
-
 
     @Subcommand("%colors")
     @Description("%colorsdescription")
     public void onColors(Player player) {
-        YamlConfiguration config = plugin.getChatColorsYml();
+        YamlConfiguration yml = plugin.getChatColorsYml();
 
-        if (config == null) {
+        if (yml == null) {
             player.sendMessage("§cConfiguração de cores não carregada.");
             return;
         }
 
-        player.sendMessage(
-                MiniMessage.miniMessage().deserialize(
-                        plugin.getConfig().getString("settings.commands.chatcolor.subcommand.colors.msg")
-                )
-        );
+        sendConfigMessage(player, "settings.commands.chatcolor.subcommand.colors.msg");
 
-
-        // Percorre todas as cores
-        for (String key : config.getConfigurationSection("colors").getKeys(false)) {
-            if (!key.equalsIgnoreCase("gradient")) {
-                String colorValue = config.getString("colors." + key + ".value");
-                String displayName = plugin.getChatColorConfig().getDisplayName(key);
-
-                // Formata <cor>Nome
-                String formatted = "     <" + colorValue + ">- " + displayName;
-                player.sendMessage(MiniMessage.miniMessage().deserialize(formatted));
-            }
-        }
-
+        yml.getConfigurationSection("colors").getKeys(false).stream()
+                .filter(key -> !key.equalsIgnoreCase("gradient"))
+                .forEach(key -> {
+                    String colorValue = yml.getString("colors." + key + ".value");
+                    String displayName = plugin.getChatColorConfig().getDisplayName(key);
+                    String formatted = "     <" + colorValue + ">- " + displayName;
+                    player.sendMessage(miniMessage.deserialize(formatted));
+                });
     }
-
 
     @Subcommand("%removecolor")
     @CommandCompletion("@nothing")
     @Description("%removecolordescription")
     public void onRemove(Player player) {
-        plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), "");
-        plugin.getCache().setChatColor(player.getUniqueId(), "");
+        savePlayerChatColor(player, "");
     }
 
+    /**
+     * Salva a cor escolhida no banco e no cache.
+     */
+    private void savePlayerChatColor(Player player, String color) {
+        plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), color);
+        plugin.getCache().setChatColor(player.getUniqueId(), color);
+    }
+
+    /**
+     * Envia mensagem configurada do plugin.yml.
+     */
+    private void sendConfigMessage(Player player, String path) {
+        String raw = plugin.getConfig().getString(path);
+        if (raw != null && !raw.isEmpty()) {
+            player.sendMessage(miniMessage.deserialize(raw));
+        }
+    }
+
+    /**
+     * Envia mensagem de sucesso com placeholder da cor.
+     */
+    private void sendSuccessMessage(Player player, String path, String replacement) {
+        String raw = plugin.getConfig().getString(path);
+        if (raw != null && !raw.isEmpty()) {
+            player.sendMessage(miniMessage.deserialize(raw.replace("[Cor]", replacement)));
+        }
+    }
 
 }

@@ -2,8 +2,6 @@ package me.sunrise.cosmeticsmanager;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.sunrise.cosmeticsmanager.storage.PlayerCosmetics;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,7 +10,7 @@ public class CosmeticsPlaceholders extends PlaceholderExpansion {
 
     private final CosmeticsManager plugin;
 
-    public CosmeticsPlaceholders(CosmeticsManager plugin) {
+    public CosmeticsPlaceholders(final CosmeticsManager plugin) {
         this.plugin = plugin;
     }
 
@@ -33,7 +31,7 @@ public class CosmeticsPlaceholders extends PlaceholderExpansion {
 
     @Override
     public boolean persist() {
-        return true; // manter registrada após reload
+        return true; // mantém registrada após reload
     }
 
     @Override
@@ -42,37 +40,25 @@ public class CosmeticsPlaceholders extends PlaceholderExpansion {
     }
 
     @Override
-    public @Nullable String onPlaceholderRequest(Player player, @NotNull String identifier) {
-        if (player == null) {
-            return "";
-        }
+    public @Nullable String onPlaceholderRequest(final Player player, @NotNull final String identifier) {
+        if (player == null) return "";
 
-        PlayerCosmetics cosmetics = plugin.getCache().get(player.getUniqueId());
-        if (cosmetics == null) {
-            return "";
-        }
+        final PlayerCosmetics cosmetics = plugin.getCache().get(player.getUniqueId());
+        if (cosmetics == null) return "";
 
-        String badge = cosmetics.getBadge();
-        String tag = cosmetics.getTag();
-        String chatColor = cosmetics.getChatColor();
+        final String id = identifier.toLowerCase();
 
-        switch (identifier.toLowerCase()) {
-            case "badge":
-                return badge != null ? badge : "";
-            case "tag":
-                if (tag != null && !tag.isEmpty()) {
-                    tag = LegacyComponentSerializer.legacySection().serialize(MiniMessage.miniMessage().deserialize(tag));
-                    return tag;
-                }
-                return "";
-            case "chatcolor":
-                if (chatColor != null && !chatColor.isEmpty()) {
-                    chatColor = LegacyComponentSerializer.legacySection().serialize(MiniMessage.miniMessage().deserialize(chatColor));
-                    return chatColor;
-                }
-                return "";
-            default:
-                return null;
-        }
+        return switch (id) {
+            case "badge" -> cosmetics.getBadge() != null ? cosmetics.getBadge() : "";
+            case "tag" -> {
+                final String tag = cosmetics.getTag();
+                yield (tag != null && !tag.isEmpty()) ? tag + "<reset>" : "";
+            }
+            case "chatcolor" -> {
+                final String color = cosmetics.getChatColor();
+                yield (color != null && !color.isEmpty()) ? color : "";
+            }
+            default -> null;
+        };
     }
 }

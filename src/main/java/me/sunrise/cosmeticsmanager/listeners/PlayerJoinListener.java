@@ -16,19 +16,20 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         var player = event.getPlayer();
+        String uuid = player.getUniqueId().toString();
 
-        // Puxa do banco
-        String savedColor = plugin.getDatabaseManager().getPlayerChatColor(player.getUniqueId().toString());
+        // Puxa do banco e coloca no cache
+        String savedColor = plugin.getDatabaseManager().getPlayerChatColor(uuid);
         if (savedColor != null) {
             plugin.getCache().setChatColor(player.getUniqueId(), savedColor);
         }
 
-        String savedTag = plugin.getDatabaseManager().getPlayerTag(player.getUniqueId().toString());
+        String savedTag = plugin.getDatabaseManager().getPlayerTag(uuid);
         if (savedTag != null) {
             plugin.getCache().setTag(player.getUniqueId(), savedTag);
         }
 
-        String savedBadge = plugin.getDatabaseManager().getPlayerBadge(player.getUniqueId().toString());
+        String savedBadge = plugin.getDatabaseManager().getPlayerBadge(uuid);
         if (savedBadge != null) {
             plugin.getCache().setBadge(player.getUniqueId(), savedBadge);
         }
