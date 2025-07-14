@@ -62,7 +62,7 @@ public class MenuClickListener implements Listener {
 
         if (!hasPermission(player, clickedItem.getPermission())) return;
 
-        runMainMenuAction(player, clickedItem);
+        runMainMenuAction(menu, player, clickedItem);
     }
 
     private void handleBrowseMenuClick(Player player, BrowseMenu browseMenu, ItemStack clicked, int slot) {
@@ -96,10 +96,10 @@ public class MenuClickListener implements Listener {
         // Prioridade: cosmético
         if (cosmeticItem != null) {
             if (!hasPermission(player, cosmeticItem.getPermission())) return;
-            runBrowseMenuAction(player, browseMenu.getMenuType(), cosmeticItem.getOnClick(), displayName);
+            runBrowseMenuAction(browseMenu, player, browseMenu.getMenuType(), cosmeticItem.getOnClick(), displayName);
         } else if (buttonItem != null) {
             if (!hasPermission(player, buttonItem.getPermission())) return;
-            runBrowseMenuAction(player, browseMenu.getMenuType(), buttonItem.getOnClick(), "");
+            runBrowseMenuAction(browseMenu, player, browseMenu.getMenuType(), buttonItem.getOnClick(), "");
         }
     }
 
@@ -112,9 +112,8 @@ public class MenuClickListener implements Listener {
         return true;
     }
 
-    private void runMainMenuAction(Player player, MenuItem item) {
+    private void runMainMenuAction(Menu menu, Player player, MenuItem item) {
         String onClick = item.getOnClick();
-        player.closeInventory();
 
         switch (onClick.toLowerCase()) {
             case "changecolor" -> player.performCommand("chatcolor set " + item.getColor());
@@ -130,10 +129,11 @@ public class MenuClickListener implements Listener {
             case "allbadges" -> player.performCommand("badges all");
             case "blockedbadges" -> player.performCommand("badges blocked");
         }
+
+        menu.getInventory().close();
     }
 
-    private void runBrowseMenuAction(Player player, String menuType, String onClick, String cosmeticName) {
-        player.closeInventory();
+    private void runBrowseMenuAction(BrowseMenu menu, Player player, String menuType, String onClick, String cosmeticName) {
         Cache cache = plugin.getCache();
         String type = cache.get(player.getUniqueId()).getMenuType();
         int page = cache.get(player.getUniqueId()).getPage();
@@ -151,6 +151,8 @@ public class MenuClickListener implements Listener {
             case "settag" -> player.performCommand("tags set " + cosmeticName);
             case "setbadge" -> player.performCommand("badges set " + cosmeticName);
         }
+
+        menu.getInventory().close();
     }
 
     private void openBrowseMenu(Player player, String command, String menuType) {
