@@ -76,19 +76,28 @@ public class CosmeticsPlaceholders extends PlaceholderExpansion {
                 if (cosmetic.isEmpty()) return "";
                 if (isCosmeticPermitted(player, plugin.getBadgesYml(), cosmetic, "emoji")) {
                     return cosmetic;
-                } return "";
+                }
+                plugin.getDatabaseManager().savePlayerBadge(player.getUniqueId().toString(), "");
+                plugin.getCache().setBadge(player.getUniqueId(), "");
+                return "";
             case "tag":
                 cosmetic = cosmetics.getTag() == null ? "" : cosmetics.getTag();
                 if (cosmetic.isEmpty()) return "";
                 if (isCosmeticPermitted(player, plugin.getTagsYml(), cosmetic, "name")) {
                     return cosmetic;
-                } return "";
+                }
+                plugin.getDatabaseManager().savePlayerTag(player.getUniqueId().toString(), "");
+                plugin.getCache().setTag(player.getUniqueId(), "");
+                return "";
             case "chatcolor":
                 cosmetic = cosmetics.getChatColor() == null ? "" : cosmetics.getChatColor();
                 if (cosmetic.isEmpty()) return "";
                 if (isColorPermitted(player, cosmetic)){
                     return cosmetic;
-                }  return "";
+                }
+                plugin.getDatabaseManager().savePlayerChatColor(player.getUniqueId().toString(), "");
+                plugin.getCache().setChatColor(player.getUniqueId(), "");
+                return "";
         }
 
         return "";
